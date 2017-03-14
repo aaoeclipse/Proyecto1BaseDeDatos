@@ -1,0 +1,4 @@
+id (PK)
+nombre varchar:255
+año int
+promedio int
