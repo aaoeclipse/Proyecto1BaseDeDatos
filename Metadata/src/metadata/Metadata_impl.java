@@ -10,13 +10,13 @@ public class Metadata_impl implements InstMetadata{
 	
 	@Override
 	public void readFiles() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	@Override
 	public void saveFiles() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
