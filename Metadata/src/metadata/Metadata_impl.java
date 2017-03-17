@@ -51,4 +51,10 @@ public class Metadata_impl implements InstMetadata{
 		}
 	}
 
+	@Override
+	public void writeOnTable(String table, String content) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
