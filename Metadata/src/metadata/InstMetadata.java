@@ -20,8 +20,8 @@ public interface InstMetadata {
 	// REQ: El nombre de la base de datos y el nombre de la tabla
 	// Mira si existe ya la tabla en la base de datos
 	public boolean checkFile(String nameOfFolder,String FileName);
-	//
-	//	
+	// REQ:
+	// 
 	public void writeOnTable (String table, String content);
 	
 }
