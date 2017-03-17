@@ -1,1 +1,0 @@
- \copy (SELECT * FROM color) TO '/home/eclipse/Desktop/Proyecto1BaseDeDatos/Archivo Maestro/test.csv' WITH CSV HEADER
