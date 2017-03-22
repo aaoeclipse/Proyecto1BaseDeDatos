@@ -7,5 +7,4 @@ public class Generate {
 		meta.createFolder("database1");
 		meta.createFile("database1", "table1");
 	}
-
 }

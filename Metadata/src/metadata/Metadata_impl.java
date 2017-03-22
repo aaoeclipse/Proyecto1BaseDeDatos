@@ -16,6 +16,7 @@ public class Metadata_impl implements InstMetadata{
 	String workingDir = System.getProperty("user.dir");
 	String archivoMaestro = "Archivo Maestro";
 	
+	//implementacion de las funciones
 	@Override
 	public void readFiles() {
 	}
@@ -56,5 +57,4 @@ public class Metadata_impl implements InstMetadata{
 		// TODO Auto-generated method stub
 		
 	}
-
 }
