@@ -2,7 +2,7 @@ package metadata;
 
 public class Database {
 	//variables
-	Table table = new Table();
+	Table[] table;
 	//constructor
 	public Database(){
 		
