@@ -23,5 +23,4 @@ public interface InstMetadata {
 	// REQ:
 	// TODO escribe el contenido deseado en la tabla de una base de datos
 	public void writeOnTable (String table, String content);
-	
 }
