@@ -9,7 +9,6 @@ public class Contenido {
 	public Contenido(){
 		
 	}
-	
 	//setter
 	public void setDate(String givenDate){
 		dateCont = givenDate;
