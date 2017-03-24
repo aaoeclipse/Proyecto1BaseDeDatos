@@ -1,7 +1,7 @@
 // Gramatica Proyecto DBMS
 // Autores:
 
-grammar decafAumentada;
+grammar gramaticaDBMS;
 
 CREATE: 'create'|'CREATE'|'Create';
 DATABASE: 'database'|'DATABASE'|'Database';

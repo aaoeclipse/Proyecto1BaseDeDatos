@@ -1,9 +1,7 @@
+package GUI;
 import java.awt.BorderLayout;
-
 import java.awt.EventQueue;
 import java.awt.Image;
-
-
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
@@ -24,18 +22,21 @@ import javax.swing.table.TableModel;
 
 import java.awt.TextArea;
 import java.awt.Button;
+import java.awt.Container;
 import java.awt.event.ActionListener;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.*;
 import java.awt.event.ActionEvent;
+
 import javax.swing.JTable;
 import javax.swing.JToolBar;
+
 import java.awt.Font;
+
 import javax.swing.UIManager;
+
 import java.awt.TextArea;
 import java.awt.Window.Type;
+
 import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeModel;
@@ -72,8 +73,9 @@ public class DataBaseGUI extends JFrame {
 
 	/**
 	 * Create the frame.
+	 * @throws IOException 
 	 */
-	public DataBaseGUI() {
+	public DataBaseGUI() throws IOException {
 		setType(Type.POPUP);
 		setTitle("ANOTHER BETTER POSTGRES");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -145,21 +147,29 @@ public class DataBaseGUI extends JFrame {
 		tree.setFont(new Font("Consolas", Font.PLAIN, 26));
 		tree.setForeground(UIManager.getColor("Button.disabledShadow"));
 		tree.setToolTipText("Hola");
+		Container cp = getContentPane();
 		configure(tree);
 		tree.setBackground(UIManager.getColor("ColorChooser.swatchesDefaultRecentColor"));
 		tree.setBounds(31, 100, 566, 1264);
 		contentPane.add(tree);
+		
+		JButton close = new JButton("");
+		close.setIcon(new ImageIcon(DataBaseGUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/close.gif")));
+		close.setBounds(12, 12, 43, 36);
+		close.addActionListener(new CloseListener());
+		contentPane.add(close);
 	
 		
 	}
 	private void ButtonAction1(JTable table, TextArea textArea){
 		DefaultTableModel  tableModel;
 		tableModel = new DefaultTableModel();
-		String columns[] = {"Probando"};
-		String Row[] = {textArea.getText()};
-		tableModel.setColumnIdentifiers(columns);
+		//String columns[] = {"Probando","Probando"};
+		String Row[] = {textArea.getText(),"luisa","mas"};
+		//tableModel.setColumnIdentifiers(columns);
 		table.setModel(tableModel);
-		tableModel.addRow(Row);
+		//tableModel.addRow(Row);
+		tableModel.addColumn("Probando", Row);
 	}
 	private void saveFile(TextArea textArea) {
 		JFileChooser saver = new JFileChooser("./");
@@ -200,13 +210,38 @@ public class DataBaseGUI extends JFrame {
 			}
 		}
 	}
-	public void configure(JTree tree) {
+	public void configure(JTree tree) throws IOException /*throws IOException*/ {
+		
+		File file = new File("DataBaseGUI.java");
+		String folder = file.getAbsolutePath();
+		System.out.println("Path "+folder);
+		
+		String current = new java.io.File(".").getCanonicalPath();
+		System.out.println("Current Dir "+ current);
+		String cd = System.getProperty("user.dir");
+		System.out.println("lol "+ cd);
 
-        File fileRoot = new File("C:/Users/Luisa A/workspace/DataBase");
+		/*
+        File fileRoot = new File(folder);
         DefaultMutableTreeNode root = new DefaultMutableTreeNode(fileRoot.getName());
         DefaultTreeModel model = new DefaultTreeModel(root);
         
         File[] subItems = fileRoot.listFiles();
+        int i = 0;
+        while(i< subItems.length){
+        	String filename = subItems[i].getName();
+            root.add(new DefaultMutableTreeNode(filename));
+           // System.out.println(filename);
+            
+            File[] subIt = subItems[i].listRoots();
+            
+            System.out.println(filename);
+            
+          
+            
+            
+            
+        }/**
         if(subItems == null){
         	
         }
@@ -217,10 +252,8 @@ public class DataBaseGUI extends JFrame {
                    // System.out.println(filename);
                   
         	}
-        }
+        }**/
         
-        tree.setModel(model);
+        //tree.setModel(model);
     }
 }
-	
-
