@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="ANTLR"/>
+	<classpathentry kind="src" path="Metadata/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Javalib/antlr-4.6-complete.jar"/>
+	<classpathentry kind="output" path="Metadata/bin"/>
+</classpath>
