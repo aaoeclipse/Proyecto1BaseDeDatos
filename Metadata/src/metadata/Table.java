@@ -8,10 +8,14 @@ public class Table {
 	Contenido[][] contenido;
 	String[] nombreDeColumnas;
 	String[] atributos;
+	
 	int contadorDeColumnas;
 	String nombreDeLaTabla;
 	
 	//Constructor
+	public Table(){
+		contadorDeColumnas = 0;
+	}
 	public Table(String nombre){
 		contadorDeColumnas = 0;
 		nombreDeLaTabla = nombre;
@@ -35,6 +39,9 @@ public class Table {
 	
 	public String nombreDeTabla(){
 		return nombreDeLaTabla;
+	}
+	public void setNombre(String name){
+		nombreDeLaTabla = name;
 	}
 	
 }

@@ -3,38 +3,66 @@ package metadata;
 import java.io.File;
 
 public class Controlador implements InterfaceDeControlador{
-	Database[] allDataBase;
+	Database DataBase = new Database();
+	boolean exists = false;
+	File fileToCheck;
+	File fileToWrite;
+	String workingDir = System.getProperty("user.dir");
+	String archivoMaestro = "Archivo Maestro";
+
 	
-
 	@Override
-	public void createDatabase(String name) {
-		// TODO Auto-generated method stub
+	public void readDatabase(String db) {
+		DataBase.setName(db);
+		File dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
+		File[] files = dir.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            DataBase.createTable(files[i].getName());
+        }
 		
 	}
 
 	@Override
-	public void deleteDatabase(String name) {
-		// TODO Auto-generated method stub
+	public boolean checkFolder(String nameOfFolder) {
+		fileToCheck = new File(workingDir + "/" + nameOfFolder);
+		 exists = fileToCheck.exists();
+		return exists;
+	}
+	
+	private void createFolder() {
+		//System.out.println(workingDir + "/"+ archivoMaestro + "/" + nameOfDB);
+		File dir = new File(workingDir + "/"+ archivoMaestro);
+		dir.mkdir();
+	}
+
+	@Override
+	public void readDirectory() {
+		File file = new File(workingDir + "/"+ archivoMaestro);
+		File[] files = file.listFiles();
+		
+		
+        for (int i = 0; i < files.length; i++) {
+            System.out.println(files[i]);
+        }
+        
 		
 	}
 
 	@Override
-	public void createTable(String dbName, String tableName) {
-		// TODO Auto-generated method stub
+	public void printDatabase() {
+		System.out.println("Base De Dato: " + DataBase.nombreDeBaseDatos + "\nTablas:");
+		for (int i=0; i < DataBase.contadorDeTablas; i++)
+			System.out.println(DataBase.obj.get(i).nombreDeLaTabla);
+
 		
 	}
 
 	@Override
-	public void deleteTable(String dbName, String tableName) {
+	public boolean checkFile(String nameOfFolder, String FileName) {
 		// TODO Auto-generated method stub
-		
+		return false;
 	}
 
-	@Override
-	public void readDatabase(File db) {
-		// TODO Auto-generated method stub
-		
-	}
 	
 	
 }
