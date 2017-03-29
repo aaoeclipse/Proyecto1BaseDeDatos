@@ -1,253 +1,148 @@
+import ANTLR.gramaticaDBMSBaseVisitor;
+import ANTLR.gramaticaDBMSParser.ActionContext;
+import ANTLR.gramaticaDBMSParser.Add_opContext;
+import ANTLR.gramaticaDBMSParser.AlterDatabaseContext;
+import ANTLR.gramaticaDBMSParser.AlterTableContext;
+import ANTLR.gramaticaDBMSParser.CreateDatabaseContext;
+import ANTLR.gramaticaDBMSParser.CreateTableContext;
+import ANTLR.gramaticaDBMSParser.DropDatabaseContext;
+import ANTLR.gramaticaDBMSParser.Eq_opContext;
+import ANTLR.gramaticaDBMSParser.InsertIntoContext;
+import ANTLR.gramaticaDBMSParser.Mult_opContext;
+import ANTLR.gramaticaDBMSParser.ProgramaContext;
+import ANTLR.gramaticaDBMSParser.Rel_opContext;
+import ANTLR.gramaticaDBMSParser.SelectFromContext;
+import ANTLR.gramaticaDBMSParser.ShowDatabaseContext;
+import ANTLR.gramaticaDBMSParser.ShowTablesContext;
+import ANTLR.gramaticaDBMSParser.UpdateSetContext;
+import ANTLR.gramaticaDBMSParser.UseDatabaseContext;
 
-public class visitor extends gramaticaDBMSBaseVisitor<T> {
-	@Override public T visitLiteral(gramaticaDBMSParser.LiteralContext ctx) { 
+public class visitor extends gramaticaDBMSBaseVisitor<String> {
+		@Override
+		public String visitPrograma(ProgramaContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitPrograma(ctx);
+		}
+	
+		//Funcion de operadores
+	
+		@Override
+		public String visitRel_op(Rel_opContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitRel_op(ctx);
+		}
 		
-		return visitChildren(ctx); }
-	}
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitFecha(gramaticaDBMSParser.FechaContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitPrograma(gramaticaDBMSParser.ProgramaContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitDatabase(gramaticaDBMSParser.DatabaseContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitCreateDatabase(gramaticaDBMSParser.CreateDatabaseContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitAlterDatabase(gramaticaDBMSParser.AlterDatabaseContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitDropDatabase(gramaticaDBMSParser.DropDatabaseContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitShowDatabase(gramaticaDBMSParser.ShowDatabaseContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitUseDatabase(gramaticaDBMSParser.UseDatabaseContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitOpTable(gramaticaDBMSParser.OpTableContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitTipo(gramaticaDBMSParser.TipoContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitCreateTable(gramaticaDBMSParser.CreateTableContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitConstraint(gramaticaDBMSParser.ConstraintContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitPrimaryKey(gramaticaDBMSParser.PrimaryKeyContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitForeignKey(gramaticaDBMSParser.ForeignKeyContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitCheck(gramaticaDBMSParser.CheckContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitExp(gramaticaDBMSParser.ExpContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitExpression(gramaticaDBMSParser.ExpressionContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitAndExpr(gramaticaDBMSParser.AndExprContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitEqExpr(gramaticaDBMSParser.EqExprContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitRelationExpr(gramaticaDBMSParser.RelationExprContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitUnaryExpr(gramaticaDBMSParser.UnaryExprContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitAlterTable(gramaticaDBMSParser.AlterTableContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitAction(gramaticaDBMSParser.ActionContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitDropTable(gramaticaDBMSParser.DropTableContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitShowTables(gramaticaDBMSParser.ShowTablesContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitShowColumns(gramaticaDBMSParser.ShowColumnsContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitInsertInto(gramaticaDBMSParser.InsertIntoContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitUpdateSet(gramaticaDBMSParser.UpdateSetContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitDeleteFrom(gramaticaDBMSParser.DeleteFromContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitSelectFrom(gramaticaDBMSParser.SelectFromContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitSep(gramaticaDBMSParser.SepContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitRel_op(gramaticaDBMSParser.Rel_opContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitEq_op(gramaticaDBMSParser.Eq_opContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitAdd_op(gramaticaDBMSParser.Add_opContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitMult_op(gramaticaDBMSParser.Mult_opContext ctx) { return visitChildren(ctx); 
-
+		@Override
+		public String visitEq_op(Eq_opContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitEq_op(ctx);
+		}
+		
+		@Override
+		public String visitAdd_op(Add_opContext ctx) {
+			visitChildren(ctx);
+			if(ctx.getChildCount()==1){
+				System.out.println(ctx.getChild(0));
+			}
+			else {
+				System.out.println(ctx.getChild(0));
+				System.out.println("ADD Operation");
+			}
+		return null;
+		}
+		
+		@Override
+		public String visitMult_op(Mult_opContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitMult_op(ctx);
+		}
+		
+		
+		//DATABASE 
+		@Override
+		public String visitCreateDatabase(CreateDatabaseContext ctx) {
+			System.out.println("visitCreateDatabase");
+			String id = ctx.getChild(2).getText();
+			System.out.println(id);
+			return "ERROR"; //errors
+		}
+		
+		@Override
+		public String visitAlterDatabase(AlterDatabaseContext ctx) {
+			System.out.println("visitAlterDatabase");
+			String id_number_1 = ctx.getChild(2).getText(); //argumento 1
+			String id_number_2 = ctx.getChild(5).getText(); //argumento 2
+			System.out.println("ID 1:"+id_number_1+"; ID 2:"+id_number_2);
+			return "ERROR";
+		}
+		
+		@Override
+		public String visitDropDatabase(DropDatabaseContext ctx) {
+			System.out.println("visitDropDatabase");
+			String id = ctx.getChild(2).getText();
+			System.out.println(id);
+			return "ERROR";
+		}
+		
+		@Override
+		public String visitShowDatabase(ShowDatabaseContext ctx) {
+			System.out.println("visitShowDatabase");
+			String id = ctx.getChild(2).getText();
+			System.out.println(id);
+			return "ERROR";
+		}
+		
+		@Override
+		public String visitUseDatabase(UseDatabaseContext ctx) {
+			System.out.println("visitUseDatabase");
+			String id = ctx.getChild(2).getText();
+			System.out.println(id);
+			return "ERROR";
+		}
+		
+		//TABLE
+		@Override
+		public String visitCreateTable(CreateTableContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitCreateTable(ctx);
+		}
+		
+		@Override
+		public String visitAlterTable(AlterTableContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitAlterTable(ctx);
+		}
+		
+		@Override
+		public String visitShowTables(ShowTablesContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitShowTables(ctx);
+		}
+		
+		@Override
+		public String visitAction(ActionContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitAction(ctx);
+		}
+		
+		//Segunda parte
+		
+		@Override
+		public String visitInsertInto(InsertIntoContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitInsertInto(ctx);
+		}
+		
+		@Override
+		public String visitUpdateSet(UpdateSetContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitUpdateSet(ctx);
+		}
+		
+		@Override
+		public String visitSelectFrom(SelectFromContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitSelectFrom(ctx);
+		}
 }
+
