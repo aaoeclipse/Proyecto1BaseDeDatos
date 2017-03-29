@@ -1,6 +1,9 @@
 package metadata;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 
 public class Controlador implements InterfaceDeControlador{
 	Database DataBase = new Database();
@@ -9,6 +12,7 @@ public class Controlador implements InterfaceDeControlador{
 	File fileToWrite;
 	String workingDir = System.getProperty("user.dir");
 	String archivoMaestro = "Archivo Maestro";
+	BufferedReader br;
 
 	
 	@Override
@@ -16,8 +20,15 @@ public class Controlador implements InterfaceDeControlador{
 		DataBase.setName(db);
 		File dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
 		File[] files = dir.listFiles();
+		
         for (int i = 0; i < files.length; i++) {
             DataBase.createTable(files[i].getName());
+            /** try {
+				br = new BufferedReader(new FileReader(files[i].getName()));
+				
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} */
         }
 		
 	}

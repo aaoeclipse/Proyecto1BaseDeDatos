@@ -1,4 +1,2 @@
-id_estudiante int (PK)
-nombre varchar:255
-año int
-promedio int
+id_estudiante	nombre	año	promedio
+1	Santiago Paiz	2012	80

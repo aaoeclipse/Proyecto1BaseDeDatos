@@ -29,17 +29,13 @@ public class Table {
 		contadorDeColumnas++;
 	}
 	
-	
 	private boolean checkSiColumnaExiste(String nombreDeColumna){
 		for (int i = 0; i < contadorDeColumnas;i++)
 			if (nombreDeColumna.equals(nombreDeColumnas[i]))
 				return true;
 		return false;
 	}
-	
-	public String nombreDeTabla(){
-		return nombreDeLaTabla;
-	}
+
 	public void setNombre(String name){
 		nombreDeLaTabla = name;
 	}

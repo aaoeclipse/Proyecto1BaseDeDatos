@@ -8,6 +8,10 @@ public interface InterfaceDeControlador {
 	public void readDirectory();
 	public void printDatabase();
 	boolean checkFile(String nameOfFolder, String FileName);
+	/*
+	public void createDataBase();
+	public void createTable();
+	public void saveData();
 	
-	
+	*/
 }
