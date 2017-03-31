@@ -24,7 +24,7 @@ public class visitor extends gramaticaDBMSBaseVisitor<String> {
 		return super.visitPrograma(ctx);
 		}
 	
-		//Funcion de operadores
+		//*************Funcion de operadores*********************
 	
 		@Override
 		public String visitRel_op(Rel_opContext ctx) {
@@ -58,7 +58,8 @@ public class visitor extends gramaticaDBMSBaseVisitor<String> {
 		}
 		
 		
-		//DATABASE 
+		//**********************DATABASE****************************
+
 		@Override
 		public String visitCreateDatabase(CreateDatabaseContext ctx) {
 			System.out.println("visitCreateDatabase");
@@ -125,7 +126,7 @@ public class visitor extends gramaticaDBMSBaseVisitor<String> {
 		return super.visitAction(ctx);
 		}
 		
-		//Segunda parte
+		//************************Segunda parte*************************
 		
 		@Override
 		public String visitInsertInto(InsertIntoContext ctx) {
