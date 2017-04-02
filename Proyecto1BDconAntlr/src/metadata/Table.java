@@ -4,12 +4,14 @@ import java.util.ArrayList;
 
 public class Table {
 	//Variables
-	ArrayList<Contenido> contenido = new ArrayList<Contenido>();
-	String[] nombreDeColumnas;
-	int[] atributos;
+	ArrayList<Columna> columna = new ArrayList<Columna>();
+
+	//0 String, 1 int, 2 char, 3 fecha
+	int atributos;
 	int contadorDeColumnas;
 	String nombreDeLaTabla;
 	String nomAtributo;
+
 	
 	//Constructor
 	public Table(String nombre){
@@ -17,19 +19,20 @@ public class Table {
 		nombreDeLaTabla = nombre;
 	}
 	//Setter
-	public void agregarColumna(String nombreDeColumna, int atributo){
+	public void agregarColumna(String nombreDeColumna, int atributo, int[] givenConstr){
 		if (checkSiColumnaExiste(nombreDeColumna))
 			return;
-		nombreDeColumnas[contadorDeColumnas] = nombreDeColumna;
-		atributos[contadorDeColumnas] = atributo;
-		contadorDeColumnas++;
+		
+		
 	}
-	
+
 	
 	private boolean checkSiColumnaExiste(String nombreDeColumna){
-		for (int i = 0; i < contadorDeColumnas;i++)
-			if (nombreDeColumna.equals(nombreDeColumnas[i]))
-				return true;
+			for (int i = 0; i < columna.size();i++)
+				if (nombreDeColumna.equals(columna.get(i).nombreDeColumna)){
+					System.out.println("Esta columna ya existe");
+					return true;
+				}
 		return false;
 	}
 	
@@ -39,6 +42,9 @@ public class Table {
 	public void setNombre(String name){
 		nombreDeLaTabla = name;
 	}
+	
+	
+	
 	private String atributoAInt(int atrib){
 		switch (atrib) {
 		case 0:
@@ -51,7 +57,6 @@ public class Table {
 			return "fecha";
 			
 		}
-		
 	}
 	
 }

@@ -16,15 +16,16 @@ public class Controlador implements InterfaceDeControlador{
 	String archivoMaestro = "Archivo Maestro";
 	File directory;
 	BufferedReader br;
+	File dir;
 	
 	
 	//======= Implmentencion de la interface ========//
 	@Override
 	public boolean readDatabase(String db) {
-		DataBase.setName(db);
-		File dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
+		dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
 		if(!dir.exists())
 			return false;
+		DataBase.setName(db);
 		File[] files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
             DataBase.createTable(files[i].getName());
@@ -37,81 +38,142 @@ public class Controlador implements InterfaceDeControlador{
 	}
 
 	@Override
-	public boolean checkFolder(String nameOfFolder) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void readDirectory() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void printDatabase() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public boolean checkFile(String nameOfFolder, String FileName) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-
-	@Override
-	public void createDatabase(String db) {
+	public boolean createDatabase(String db) {
 		    directory = new File(workingDir + "/" + archivoMaestro + "/" + db);
 
 		    if (directory.exists()) {
 		        System.out.println("Folder already exists");
+		    	return false;
 		    } else {
 		        directory.mkdirs();
 		    }
+		    return true;
 	}
 
+	@Override
+	public boolean createTable(String table, String db) {
+		dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
+		if(!dir.exists()) {
+			System.out.println("La base de datos no existe");
+			return false;
+		}
+		DataBase.setName(db);
+		loadDatabase(db);
+		DataBase.createTable(table);
+		//TODO write table on a file
+		return true;
+	}
 
 	@Override
-	public void createTable(String table, String db) {
+	public boolean createColumna(String db, String table, String colName) {
 		// TODO Auto-generated method stub
+		return true;
 		
 	}
-
+	
+	@Override
+	public boolean alterColumna(String db, String table, String colName) {
+		// TODO Auto-generated method stub
+		return true;
+	}
 
 	@Override
-	public void createColumna(String db, String table, String colName) {
+	public boolean alterDatabase(String dbViejo, String dbNuevo) {
 		// TODO Auto-generated method stub
+		return true;
 		
 	}
 	
 	//==============Clases Privadas===========/
-	private void leerFile(String fileParaLeer,String db){
+	private void leerFile(String fileParaLeer, String db, int currTable){
 		try {
 			br = new BufferedReader(new FileReader(workingDir + "/" + archivoMaestro + "/" + db + "/" + fileParaLeer));
-			
+			String contenido = null;
+			int atributo = -1;
+			int[] constraint = new int [3];
+			int countConstraint = 0;
 			try {
-				br.readLine();
+				String currLine = br.readLine();
+				//TODO todavia no esta terminado
+				
+				//LEE COLUMNAS
+				while(!currLine.equals("%%")) {
+				
+				String[] parts = currLine.split(",");
+				for(int i=0;i<parts.length;i++){
+					if(i == 0)
+						contenido = parts[i];
+					
+					//Atributo: 0 String, 1 int, 2 char, 3 fecha
+					if (parts[i].equalsIgnoreCase("String"))
+						atributo = 0;
+					if (parts[i].equals("int"))
+						atributo = 1;
+					if (parts[i].equals("char"))
+						atributo = 2;
+					if (parts[i].equals("fecha"))
+						atributo = 3;
+					
+					//contraints: 0 = nada ,1 = primary key, 2 = Foreign key, 3 = Check
+					if (parts[i].equals("PK"))
+					{
+						if(countConstraint <2){
+							constraint[countConstraint] = 1;
+							countConstraint++;
+						}
+					}
+					if (parts[i].equals("FK"))
+						if(countConstraint <2){
+							constraint[countConstraint] = 2;
+							countConstraint++;
+						}
+					if (parts[i].equals("CHECK"))
+						if(countConstraint <2){
+							constraint[countConstraint] = 3;
+							countConstraint++;
+						}
+					}
+				}
+			DataBase.table.get(currTable).agregarColumna(contenido, atributo,constraint);
+			//LEE CONTENIDO
+			
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("Error en leerFile");
 			}
 			
 		} catch (FileNotFoundException e) {
-			System.out.println("Error: Controlador, no se logro leer el folder");
+			System.out.println("Error: Controlador, no logro leer el folder");
 			e.printStackTrace();
 		}
 	}
 	
-	private void loadDatabase(String db){
+	private boolean checkFolder(String nameOfFolder) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	private void loadDatabase(String db) {
+		File[] files = dir.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            DataBase.createTable(files[i].getName());
+            //TODO leer dentro de los files ()
+            leerFile(files[i].getName(), db, i);
+        }
+        
 		
 	}
 
-	@Override
-	public void alterColumna(String db, String table, String colName) {
+	private void printDatabase() {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	private boolean checkFile(String nameOfFolder, String FileName) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
 	
 }

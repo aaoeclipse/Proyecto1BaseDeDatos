@@ -9,6 +9,10 @@ public class Contenido {
 	public Contenido(){
 		
 	}
+	public Contenido(String cont){
+		dateCont = cont;
+	}
+
 	//setter
 	public void setDate(String givenDate){
 		dateCont = givenDate;
