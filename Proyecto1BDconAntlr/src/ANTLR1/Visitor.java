@@ -192,35 +192,6 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                 }
             }
 	}
-
-	
-	@Override
-	public Object visitDmlQuery(DmlQueryContext ctx) {
-		// TODO Auto-generated method stub
-		return super.visitDmlQuery(ctx);
-	}
-	
-	@Override
-	public Object visitFkNombre(FkNombreContext ctx) {
-		// TODO Auto-generated method stub
-		return super.visitFkNombre(ctx);
-	}
-	
-	@Override
-	public Object visitDbName(DbNameContext ctx) {
-		// TODO Auto-generated method stub
-		return super.visitDbName(ctx);
-	}
-	
-	@Override
-	public Object visitPrimary(PrimaryContext ctx) {
-		if(ctx.children.size()==1){
-			return visit(ctx.compareExpr());
-		}
-		else{
-			return visit(ctx.expression());
-		}
-	}
 	
 	@Override
 	public Object visitVal(ValContext ctx) {
@@ -246,6 +217,58 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         else{return "ERROR";}
 	}
 	
+	@Override
+	public Object visitTipo(TipoContext ctx) {
+				if(ctx.CHAR()!= null){
+		                    return Column.CHAR_TYPE;
+		                }
+		                else if (ctx.DATE()!= null){
+		                    return Column.DATE_TYPE;
+		                }
+		                else if (ctx.INT()!= null){
+		                    return Column.INT_TYPE;
+
+		                }
+		                else if (ctx.FLOAT()!= null){
+		                    return Column.FLOAT_TYPE;
+		                }
+		                else{
+		                    return "ERROR";
+		                }
+	}
+
+	
+	@Override
+	public Object visitFactor(FactorContext ctx) {
+		if(ctx.children.size()== 1){
+            return visit(ctx.primary());
+
+        }
+        else{
+            Object l =  visit(ctx.primary());
+            if((l instanceof Expression)){
+                Expression l1 = (Expression)l;
+                NotExpression e = new NotExpression(l1);
+                return e;
+            }
+            else{
+                return "ERROR";
+            }
+        }
+	}
+	
+	@Override
+	public Object visitPrimary(PrimaryContext ctx) {
+		if(ctx.children.size()==1){
+			return visit(ctx.compareExpr());
+		}
+		else{
+			return visit(ctx.expression());
+		}
+	}
+	
+	
+	//TODOS LOS OVERRIDES AUTOGENERADOS
 	@Override
 	public Object visitValueList(ValueListContext ctx) {
 		// TODO Auto-generated method stub
@@ -339,49 +362,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	}
 	
 	@Override
-	public Object visitFactor(FactorContext ctx) {
-		if(ctx.children.size()== 1){
-            return visit(ctx.primary());
-
-        }
-        else{
-            Object l =  visit(ctx.primary());
-            if((l instanceof Expression)){
-                Expression l1 = (Expression)l;
-                NotExpression e = new NotExpression(l1);
-                return e;
-            }
-            else{
-                return "ERROR";
-            }
-        }
-	}
-	
-	@Override
 	public Object visitColumnsUpdate(ColumnsUpdateContext ctx) {
 		// TODO Auto-generated method stub
 		return super.visitColumnsUpdate(ctx);
-	}
-	
-	@Override
-	public Object visitTipo(TipoContext ctx) {
-		// TODO Auto-generated method stub
-				if(ctx.CHAR()!= null){
-		                    return Column.CHAR_TYPE;
-		                }
-		                else if (ctx.DATE()!= null){
-		                    return Column.DATE_TYPE;
-		                }
-		                else if (ctx.INT()!= null){
-		                    return Column.INT_TYPE;
-
-		                }
-		                else if (ctx.FLOAT()!= null){
-		                    return Column.FLOAT_TYPE;
-		                }
-		                else{
-		                    return "ERROR";
-		                }
 	}
 	
 	@Override
@@ -399,5 +382,23 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	public Object visitColName(ColNameContext ctx) {
 		// TODO Auto-generated method stub
 		return super.visitColName(ctx);
+	}
+	
+	@Override
+	public Object visitDmlQuery(DmlQueryContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitDmlQuery(ctx);
+	}
+	
+	@Override
+	public Object visitFkNombre(FkNombreContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitFkNombre(ctx);
+	}
+	
+	@Override
+	public Object visitDbName(DbNameContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitDbName(ctx);
 	}
 }
