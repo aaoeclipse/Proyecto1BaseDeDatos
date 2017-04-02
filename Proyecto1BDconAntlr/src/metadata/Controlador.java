@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class Controlador implements InterfaceDeControlador{
@@ -18,8 +19,8 @@ public class Controlador implements InterfaceDeControlador{
 	BufferedReader br;
 	File dir;
 	
-	
 	//======= Implmentencion de la interface ========//
+	
 	@Override
 	public boolean readDatabase(String db) {
 		dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
@@ -29,12 +30,9 @@ public class Controlador implements InterfaceDeControlador{
 		File[] files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
             DataBase.createTable(files[i].getName());
-           //TODO leer file 
-            leerFile(files[i].getName(), db);
-            DataBase.table.get(i).agregarColumna("id", 1);
+            leerFile(files[i].getName(), db, i);
         }
         return true;
-		
 	}
 
 	@Override
@@ -61,6 +59,15 @@ public class Controlador implements InterfaceDeControlador{
 		loadDatabase(db);
 		DataBase.createTable(table);
 		//TODO write table on a file
+
+			FileWriter output=null;
+			try {
+				output= new FileWriter(workingDir + "/" + archivoMaestro + "/" + db + "/"+ table);
+				output.close();
+			} catch (IOException e) {
+				System.out.println("Error creando el file");
+				return false;
+			}
 		return true;
 	}
 
@@ -85,6 +92,7 @@ public class Controlador implements InterfaceDeControlador{
 	}
 	
 	//==============Clases Privadas===========/
+	
 	private void leerFile(String fileParaLeer, String db, int currTable){
 		try {
 			br = new BufferedReader(new FileReader(workingDir + "/" + archivoMaestro + "/" + db + "/" + fileParaLeer));
@@ -92,10 +100,9 @@ public class Controlador implements InterfaceDeControlador{
 			int atributo = -1;
 			int[] constraint = new int [3];
 			int countConstraint = 0;
+			int columnas = 0;
 			try {
 				String currLine = br.readLine();
-				//TODO todavia no esta terminado
-				
 				//LEE COLUMNAS
 				while(!currLine.equals("%%")) {
 				
@@ -133,10 +140,18 @@ public class Controlador implements InterfaceDeControlador{
 							countConstraint++;
 						}
 					}
+				currLine = br.readLine();
 				}
+				
 			DataBase.table.get(currTable).agregarColumna(contenido, atributo,constraint);
+			currLine = br.readLine();
 			//LEE CONTENIDO
-			
+			while(currLine != null){
+				for (int i = 0; i < columnas; i++) {
+					DataBase.table.get(currTable).columna.get(i % columnas).agregaContenido(currLine);
+				}
+				
+			}
 			} catch (IOException e) {
 				System.out.println("Error en leerFile");
 			}
@@ -157,21 +172,24 @@ public class Controlador implements InterfaceDeControlador{
 		File[] files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
             DataBase.createTable(files[i].getName());
-            //TODO leer dentro de los files ()
             leerFile(files[i].getName(), db, i);
         }
         
 		
 	}
 
-	private void printDatabase() {
-		// TODO Auto-generated method stub
+	private void printDatabase(String db) {
+		System.out.println("");
 		
 	}
 	
 	private boolean checkFile(String nameOfFolder, String FileName) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	private void writeDatabase(){
+		
 	}
 
 

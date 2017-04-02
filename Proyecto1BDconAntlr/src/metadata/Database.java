@@ -7,6 +7,7 @@ public class Database {
 	ArrayList<Table> table = new ArrayList<Table>();
 	int contadorDeTablas;
 	String nombreDeBaseDatos;
+	
 	//constructor
 	public Database(String nombre){
 		contadorDeTablas = 0;
@@ -15,7 +16,7 @@ public class Database {
 	public Database(){
 		contadorDeTablas = 0;
 	}
-	//setter
+	//Funciones
 	public void createTable(String name){
 		if (!checkTableName(name)){
 			System.out.println("nombre de tabla ya existe!");
@@ -25,10 +26,11 @@ public class Database {
 		contadorDeTablas++;
 		
 	}
+	
 	public void setName(String name){
 		nombreDeBaseDatos = name;
 	}
-	
+
 	private boolean checkTableName(String name){
 		for(int i = 0; i < table.size();i++){
 			if (table.get(i).nombreDeLaTabla.equalsIgnoreCase(name))

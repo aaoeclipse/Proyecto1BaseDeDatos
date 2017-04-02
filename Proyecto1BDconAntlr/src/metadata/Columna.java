@@ -19,4 +19,21 @@ public class Columna {
 			contenido.add(new Contenido(givenContenido[i]));
 		}
 	}
+	
+	//========== Funciones ========//
+	public void agregaContenido(String cont)
+	{
+		if(!repetidoCheck(cont)){
+			contenido.add(new Contenido(cont));
+		}
+	}
+	
+	private boolean repetidoCheck(String cont){
+		for(int i = 0; i < contenido.size();i++)
+		{
+			if(contenido.get(i).strCont.equalsIgnoreCase(cont))
+				return true;
+		}
+		return false;
+	}
 }

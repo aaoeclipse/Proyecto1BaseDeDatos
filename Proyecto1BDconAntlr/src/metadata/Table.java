@@ -18,15 +18,14 @@ public class Table {
 		contadorDeColumnas = 0;
 		nombreDeLaTabla = nombre;
 	}
-	//Setter
+	
+	//======== funciones ========//
 	public void agregarColumna(String nombreDeColumna, int atributo, int[] givenConstr){
 		if (checkSiColumnaExiste(nombreDeColumna))
 			return;
-		
-		
+			
 	}
 
-	
 	private boolean checkSiColumnaExiste(String nombreDeColumna){
 			for (int i = 0; i < columna.size();i++)
 				if (nombreDeColumna.equals(columna.get(i).nombreDeColumna)){
@@ -44,7 +43,7 @@ public class Table {
 	}
 	
 	
-	
+	//para escribir despues
 	private String atributoAInt(int atrib){
 		switch (atrib) {
 		case 0:

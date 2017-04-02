@@ -1,7 +1,7 @@
 package metadata;
 
 public class Contenido {
-	String dateCont;
+	String strCont;
 	float floatCont;
 	int intCont;
 	char charCont;
@@ -10,12 +10,12 @@ public class Contenido {
 		
 	}
 	public Contenido(String cont){
-		dateCont = cont;
+		strCont = cont;
 	}
 
 	//setter
 	public void setDate(String givenDate){
-		dateCont = givenDate;
+		strCont = givenDate;
 	}
 	public void setFloat(float givenFloat){
 		floatCont = givenFloat;
@@ -28,7 +28,7 @@ public class Contenido {
 	}
 	//getter
 	public String getDate(){
-		return dateCont;
+		return strCont;
 	}
 	public float getFloat(){
 		return floatCont;
