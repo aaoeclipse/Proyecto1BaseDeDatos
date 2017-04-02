@@ -1,3 +1,4 @@
+package ANTLR1;
 // Generated from DATABASE.g4 by ANTLR 4.6
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;

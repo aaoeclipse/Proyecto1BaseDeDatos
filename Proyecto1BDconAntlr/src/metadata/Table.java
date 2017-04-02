@@ -1,15 +1,15 @@
 package metadata;
-	/** 
-	 * Se va a utilizar 
-	 * **/
- 	
+
+import java.util.ArrayList;
+
 public class Table {
 	//Variables
-	Contenido[][] contenido;
+	ArrayList<Contenido> contenido = new ArrayList<Contenido>();
 	String[] nombreDeColumnas;
-	String[] atributos;
+	int[] atributos;
 	int contadorDeColumnas;
 	String nombreDeLaTabla;
+	String nomAtributo;
 	
 	//Constructor
 	public Table(String nombre){
@@ -17,7 +17,7 @@ public class Table {
 		nombreDeLaTabla = nombre;
 	}
 	//Setter
-	public void agregarColumna(String nombreDeColumna, String atributo){
+	public void agregarColumna(String nombreDeColumna, int atributo){
 		if (checkSiColumnaExiste(nombreDeColumna))
 			return;
 		nombreDeColumnas[contadorDeColumnas] = nombreDeColumna;
@@ -38,6 +38,20 @@ public class Table {
 	}
 	public void setNombre(String name){
 		nombreDeLaTabla = name;
+	}
+	private String atributoAInt(int atrib){
+		switch (atrib) {
+		case 0:
+			return "string";
+		case 1:
+			return "int";
+		case 2:
+			return "char";
+		default:
+			return "fecha";
+			
+		}
+		
 	}
 	
 }

@@ -11,6 +11,7 @@ import ANTLR.gramaticaDBMSParser.DropDatabaseContext;
 import ANTLR.gramaticaDBMSParser.Eq_opContext;
 import ANTLR.gramaticaDBMSParser.InsertIntoContext;
 import ANTLR.gramaticaDBMSParser.Mult_opContext;
+import ANTLR.gramaticaDBMSParser.OpTableContext;
 import ANTLR.gramaticaDBMSParser.ProgramaContext;
 import ANTLR.gramaticaDBMSParser.Rel_opContext;
 import ANTLR.gramaticaDBMSParser.SelectFromContext;
@@ -18,8 +19,11 @@ import ANTLR.gramaticaDBMSParser.ShowDatabaseContext;
 import ANTLR.gramaticaDBMSParser.ShowTablesContext;
 import ANTLR.gramaticaDBMSParser.UpdateSetContext;
 import ANTLR.gramaticaDBMSParser.UseDatabaseContext;
+import metadata.*;
 
 public class visitor extends gramaticaDBMSBaseVisitor<String> {
+		InterfaceDeControlador meta = new Controlador ();
+		
 		@Override
 		public String visitPrograma(ProgramaContext ctx) {
 		// TODO Auto-generated method stub
@@ -27,7 +31,8 @@ public class visitor extends gramaticaDBMSBaseVisitor<String> {
 		}
 	
 		//*************Funcion de operadores*********************
-	
+
+		
 		@Override
 		public String visitRel_op(Rel_opContext ctx) {
 		// TODO Auto-generated method stub
@@ -66,7 +71,9 @@ public class visitor extends gramaticaDBMSBaseVisitor<String> {
 		public String visitCreateDatabase(CreateDatabaseContext ctx) {
 			System.out.println("visitCreateDatabase");
 			String id = ctx.getChild(2).getText();
+			meta.createDatabase(id);
 			System.out.println(id);
+			
 			return "ERROR"; //errors
 		}
 		
@@ -104,6 +111,12 @@ public class visitor extends gramaticaDBMSBaseVisitor<String> {
 		}
 		
 		//TABLE
+		@Override
+		public String visitOpTable(OpTableContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitOpTable(ctx);
+		}
+		
 		@Override
 		public String visitCreateTable(CreateTableContext ctx) {
 		// TODO Auto-generated method stub

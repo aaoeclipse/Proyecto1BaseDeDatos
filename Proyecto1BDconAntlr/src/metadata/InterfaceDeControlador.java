@@ -7,7 +7,10 @@ public interface InterfaceDeControlador {
 	public boolean checkFolder(String nameOfFolder);
 	public void readDirectory();
 	public void printDatabase();
-	boolean checkFile(String nameOfFolder, String FileName);
+	public boolean checkFile(String nameOfFolder, String FileName);
+	public void createDatabase(String db);
+	public void createTable(String table, String db);
+	public void createColumna();
 	
 	
 }
