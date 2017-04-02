@@ -1,4 +1,5 @@
-import ANTLR.DATABASEBaseVisitor;
+package ANTLR1;
+import ANTLR1.DATABASEBaseVisitor;
 
 
 public class Visitor extends DATABASEBaseVisitor<String> {
