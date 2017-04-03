@@ -59,11 +59,215 @@ import ANTLR1.DATABASEParser.ValueListContext;
 
 
 public class Visitor extends DATABASEBaseVisitor<Object> {
+	//OJO, hay que revisar la primera parte ya que no tenemos las mismas clases ademas, estas funciones
+	//nos sirven para la logica de las funciones del extend
 	
 	
+	DBMS  dbms;
+    ArrayList<Column> colsCreate; // Almacena las columns que se crean en CREATE TABLE para poder verificarlas en los metodos de constraints
+    Table tableCreate;
+    Column addedCol; //Column que se acaba de add en add column
+    TableMetaData tableCreateMetaData;
+    String createTableName;
+    ArrayList<Column> availableCols;
+    ArrayList<Constraint> availableCons;
+    static TableIterator iterator;
+    Table temp2 = null;
+
+    ArrayList<Table> tablesInsert;
+    ArrayList<Integer> regsInsert;
+    public Loader(DBMS dbms){
+        ArrayList<Table> tablesInsert = new ArrayList<Table>();
+        this.dbms = dbms;
+
+    }
+
+    public void error(String s){
+        Frame.jTextArea2.setText(s);
+    }
+
+    public Table cartesianProduct(ArrayList<Table> tables){
+        Table result = new Table();
+        result.name = "temp";
+        // If there is only one table we return a new temporal table with
+        // the same tuple
+        if(tables.size()==1){
+            result.tuples.addAll(tables.get(0).tuples);
+            result.columns.addAll(tables.get(0).columns);
+            return result;
+        }
+        else if(tables.size()==2){
+            // ADD all the columns of the first and second table
+            result.columns.addAll(tables.get(0).columns);
+            result.columns.addAll(tables.get(1).columns);
+            // Combine all Tuples
+            for(Tuple t1 :tables.get(0).tuples){
+                for(Tuple t2: tables.get(1).tuples){
+                    Tuple newTuple = new Tuple(result);
+                    newTuple.values.addAll(t1.values);
+                    newTuple.values.addAll(t2.values);
+                    result.tuples.add(newTuple);
+                }
+            }
+            return result;
+        }
+        else if(tables.size()>2){
+            // Add all columns
+            for(Table t:tables){
+                result.columns.addAll(t.columns);
+            }
+            ArrayList<Tuple> resultingTuples = new ArrayList<Tuple>();
+            // Combine all tuples
+            for(Tuple t1 :tables.get(0).tuples){
+                for(Tuple t2: tables.get(1).tuples){
+                    Tuple newTuple = new Tuple(result);
+                    newTuple.values.addAll(t1.values);
+                    newTuple.values.addAll(t2.values);
+                    resultingTuples.add(newTuple);
+                }
+            }
+            // Combine more tuples if there is more than 2 tables
+            ArrayList<Tuple> currentTuples = new ArrayList<Tuple>();
+            ArrayList<Tuple> priorTuples = new ArrayList<Tuple>();
+
+            for(int i =2; i<tables.size();i++){
+                currentTuples.clear();
+                currentTuples.addAll(tables.get(i).tuples);
+                priorTuples.clear();
+                priorTuples.addAll(resultingTuples);
+                resultingTuples.clear();
+                for(Tuple t1: priorTuples){
+                    for(Tuple t2: currentTuples){
+                        Tuple newTuple = new Tuple(result);
+                        newTuple.values.addAll(t1.values);
+                        newTuple.values.addAll(t2.values);
+                        resultingTuples.add(newTuple);
+                    }
+                }
+            }
+            result.tuples.addAll(resultingTuples);
+            return result;
+
+
+
+
+        }
+        else{return null;}
+
+    }
+
+    public ArrayList<Constraint> getReferences(String tableName){
+        ArrayList<Constraint> result = new ArrayList<Constraint>();
+        ArrayList<Constraint> cons = getAllForeignConstraints();
+        for(Constraint c: cons){
+            if(c.foreignTable.equalsIgnoreCase(tableName)){
+                result.add(c);
+            }
+        }
+        return result;
+
+
+    }
+
+    // get Column reciving a string and an array of columns.
+    public Column getColumn(String name, ArrayList<Column> cols){
+        for(Column c: cols){
+            if(c.name.equalsIgnoreCase(name)){
+                return c;
+            }
+        }
+        return null;
+    }
+
+    public boolean foreignDeleted(Table t){
+        boolean found = true;
+        ArrayList<Constraint> refs = getReferences(t.name);
+        for(Constraint refCons: refs){
+            Table localTable = Table.loadTable(refCons.table);
+            for(Tuple tuple:localTable.tuples){
+                ArrayList<Integer> searchIndex = new ArrayList<Integer>();
+                ArrayList<Integer> indexT = new ArrayList<Integer>();
+                ArrayList<Object> currentValues = new ArrayList<Object>();
+                for(Column col: refCons.localFKs){
+                    int index = localTable.getColumnIndex(localTable.name);
+                    searchIndex.add(index);
+                }
+                for(int iv: searchIndex){
+                    currentValues.add(tuple.values.get(iv));
+
+                }
+                for(Column c2: refCons.refKeys){
+                    int index2 = t.getColumnIndex(c2.name);
+                    indexT.add(index2);
+
+                }
+                // Check if tuple values excist
+                // the table reference falues (example UPDATE tableName)
+                found = t.containsValue(currentValues, indexT);
+                if(!found)
+                    return found;
+            }
+        }
+        return found;
+    }
+
+    // Returns all the Constrains in the current data base
+    public ArrayList<Constraint> getAllForeignConstraints(){
+         ArrayList<Constraint> result = new ArrayList<Constraint>();
+         DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
+         for(TableMetaData t: d.tables){
+            ArrayList<Constraint> c = Table.loadConstraints(t.name);
+            for(Constraint c1: c){
+                if(c1.type==Constraint.FK){
+                    result.add(c1);
+                }
+            }
+         }
+         return result;
+    }
+    public Constraint getReferences(String colName, String tableName, ArrayList<Constraint> cons){
+        for(Constraint c: cons){
+            if(c.foreignTable.equalsIgnoreCase(tableName)){
+                for(Column col: c.refKeys){
+                    if(col.name.equalsIgnoreCase(colName)){
+                        return c;
+                    }
+                }
+
+            }
+        }
+        return null;
+    }
+    // Returns true if it finds a PK in the constraints
+    public boolean hasPK(ArrayList<Constraint> cons){
+        for(Constraint c:cons){
+            if(c.type==Constraint.PK){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Constraint getConstraint(String c, ArrayList<Constraint> cons){
+        for(Constraint c1: cons){
+            if(c.equalsIgnoreCase(c1.name)){
+                return c1;
+            }
+        }
+        return null;
+    }
+
+    public boolean getConstraint(Constraint c, ArrayList<Constraint> cons){
+        for(Constraint c1: cons){
+            if(c.name.equalsIgnoreCase(c1.name)){
+                return true;
+            }
+        }
+        return false;
+    }
 	
 	
-	
+	//Aqui termina la primera parte y empiezan las funciones del extend
 	/********************************************************************/
 	@Override
 	//Se debe cambiar db.renameDB a la funcion para cambiar el nombre dentro del manejo de bases de datos
@@ -880,7 +1084,6 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	
 	//*******************************************************************************************************************************
 	//Revisar bien esta parte
-
 	@Override
 	public Object visitSingleColConstraint(SingleColConstraintContext ctx) {
 		Debug.add("Agregando restriccion de column...");
@@ -1101,7 +1304,6 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
         return "ERROR";
 	}
-	
 	
 	//*******************************************************************************************************************************
 	//revisar bien esta aprte
