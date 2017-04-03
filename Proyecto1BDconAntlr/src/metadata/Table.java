@@ -56,7 +56,10 @@ public class Table {
 
 		}
 	}
-
+	private int atributoAInt(String atrib){
+		return 1;
+		
+	}
 	public String[] readTable(){
 		String[] returnArray = new String[columna.size()];
 		for(int i=0;i<columna.size();i++){
@@ -74,12 +77,18 @@ public class Table {
 		colEnString = columna.get(colBuscada).nombreDeColumna + "," + columna.get(colBuscada).readCol();
 		return colEnString;
 	}
-	private int buscarColumnaConNombre(String nombreParaBuscar){
+	public int buscarColumnaConNombre(String nombreParaBuscar){
 		for(int i = 0; i < columna.size();i++){
 			if (columna.get(i).nombreDeColumna.equalsIgnoreCase(nombreParaBuscar))
 				return i;
 		}
 		return -1;
+	}
+	public void agregarLineaALasColumnas(String cont){
+		String[] contSplit = cont.split(",");
+		for(int i = 0; i < contSplit.length;i++){
+			columna.get(i % columna.size()).agregaContenido(contSplit[i]);
+		}
 	}
 
 }

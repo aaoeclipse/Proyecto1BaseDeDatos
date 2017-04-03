@@ -21,8 +21,7 @@ public class Controlador implements InterfaceDeControlador{
 
 	//======= Implmentencion de la interface ========//
 
-	@Override
-	public boolean readDatabase(String db) {
+	private boolean readDatabase(String db) {
 		dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
 		if(!dir.exists())
 			return false;
@@ -90,7 +89,7 @@ public class Controlador implements InterfaceDeControlador{
 
 	@Override
 	public boolean dropDatabase(String db) {
-		if (existeDatabase(db))
+		if (!readDatabase(db))
 			return false;
 		dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
 		dir.delete();
@@ -157,10 +156,9 @@ public class Controlador implements InterfaceDeControlador{
 	}
 
 	@Override
-	public boolean useDatabase() {
-		// TODO Auto-generated method stub
-		//if (readDatabase(db))
-		//	return true;
+	public boolean useDatabase(String db) {
+		if (readDatabase(db))
+			return true;
 		return false;
 	}
 
@@ -177,9 +175,17 @@ public class Controlador implements InterfaceDeControlador{
 	}
 
 	@Override
-	public boolean insert() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean insert(String db, String table, String Col, String input) {
+		if (!readDatabase(db)){
+			System.out.println("Error en insert: base de datos no encontrada");
+			return false;
+		}
+		if (!DataBase.checkTableName(table)){
+			System.out.println("Error en insert: tabla no encontrada");
+			return false;
+		}
+		DataBase.table.get(DataBase.tablaBuscada).agregarLineaALasColumnas(input);
+		return true;
 	}
 
 	@Override
@@ -267,11 +273,5 @@ public class Controlador implements InterfaceDeControlador{
 			leerFile(files[i].getName(), db, i);
 		}
 	}
-
-	private boolean existeDatabase(String db){
-		
-		return false;
-	}
-
 	
 }
