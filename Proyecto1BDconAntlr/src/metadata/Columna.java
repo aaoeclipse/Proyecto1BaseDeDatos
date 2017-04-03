@@ -10,7 +10,7 @@ public class Columna {
 		int[] constraint;
 		ArrayList<Contenido> contenido = new ArrayList<Contenido>();
 		
-	public Columna(){
+	public Columna(String name, int atributos, int[] givenConstraint){
 		
 	}
 	public Columna(String name, String[] givenContenido){

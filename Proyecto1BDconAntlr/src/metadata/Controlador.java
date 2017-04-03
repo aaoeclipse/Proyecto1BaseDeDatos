@@ -18,9 +18,9 @@ public class Controlador implements InterfaceDeControlador{
 	File directory;
 	BufferedReader br;
 	File dir;
-	
+
 	//======= Implmentencion de la interface ========//
-	
+
 	@Override
 	public boolean readDatabase(String db) {
 		dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
@@ -28,24 +28,24 @@ public class Controlador implements InterfaceDeControlador{
 			return false;
 		DataBase.setName(db);
 		File[] files = dir.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            DataBase.createTable(files[i].getName());
-            leerFile(files[i].getName(), db, i);
-        }
-        return true;
+		for (int i = 0; i < files.length; i++) {
+			DataBase.createTable(files[i].getName());
+			leerFile(files[i].getName(), db, i);
+		}
+		return true;
 	}
 
 	@Override
 	public boolean createDatabase(String db) {
-		    directory = new File(workingDir + "/" + archivoMaestro + "/" + db);
+		directory = new File(workingDir + "/" + archivoMaestro + "/" + db);
 
-		    if (directory.exists()) {
-		        System.out.println("Folder already exists");
-		    	return false;
-		    } else {
-		        directory.mkdirs();
-		    }
-		    return true;
+		if (directory.exists()) {
+			System.out.println("Folder already exists");
+			return false;
+		} else {
+			directory.mkdirs();
+		}
+		return true;
 	}
 
 	@Override
@@ -58,41 +58,36 @@ public class Controlador implements InterfaceDeControlador{
 		DataBase.setName(db);
 		loadDatabase(db);
 		DataBase.createTable(table);
-		//TODO write table on a file
-
-			FileWriter output=null;
-			try {
-				output= new FileWriter(workingDir + "/" + archivoMaestro + "/" + db + "/"+ table);
-				output.close();
-			} catch (IOException e) {
-				System.out.println("Error creando el file");
-				return false;
-			}
+		FileWriter output=null;
+		try {
+			output= new FileWriter(workingDir + "/" + archivoMaestro + "/" + db + "/"+ table);
+			output.close();
+		} catch (IOException e) {
+			System.out.println("Error creando el file");
+			return false;
+		}
 		return true;
 	}
 
 	@Override
-	public boolean createColumna(String db, String table, String colName) {
-		// TODO Auto-generated method stub
+	public boolean createColumna(String db, String table, String colName, int atributo, int[] constraint) {
+		readDatabase(db);
+		DataBase.createColum(table, colName, atributo, constraint);
 		return true;
-		
-	}
-	
-	@Override
-	public boolean alterColumna(String db, String table, String colName) {
-		// TODO Auto-generated method stub
-		return true;
+
 	}
 
 	@Override
 	public boolean alterDatabase(String dbViejo, String dbNuevo) {
-		// TODO Auto-generated method stub
+		//TODO check si la base de datos existe
+		dir = new File(workingDir + "/" + archivoMaestro + "/" + dbViejo);
+		dir.renameTo(new File(workingDir + "/" + archivoMaestro + "/" + dbNuevo));
 		return true;
-		
+
 	}
-	
+
 	//==============Clases Privadas===========/
-	
+
 	private void leerFile(String fileParaLeer, String db, int currTable){
 		try {
 			br = new BufferedReader(new FileReader(workingDir + "/" + archivoMaestro + "/" + db + "/" + fileParaLeer));
@@ -105,63 +100,63 @@ public class Controlador implements InterfaceDeControlador{
 				String currLine = br.readLine();
 				//LEE COLUMNAS
 				while(!currLine.equals("%%")) {
-				
-				String[] parts = currLine.split(",");
-				for(int i=0;i<parts.length;i++){
-					if(i == 0)
-						contenido = parts[i];
-					
-					//Atributo: 0 String, 1 int, 2 char, 3 fecha
-					if (parts[i].equalsIgnoreCase("String"))
-						atributo = 0;
-					if (parts[i].equals("int"))
-						atributo = 1;
-					if (parts[i].equals("char"))
-						atributo = 2;
-					if (parts[i].equals("fecha"))
-						atributo = 3;
-					
-					//contraints: 0 = nada ,1 = primary key, 2 = Foreign key, 3 = Check
-					if (parts[i].equals("PK"))
-					{
-						if(countConstraint <2){
-							constraint[countConstraint] = 1;
-							countConstraint++;
+
+					String[] parts = currLine.split(",");
+					for(int i=0;i<parts.length;i++){
+						if(i == 0)
+							contenido = parts[i];
+
+						//Atributo: 0 String, 1 int, 2 char, 3 fecha
+						if (parts[i].equalsIgnoreCase("String"))
+							atributo = 0;
+						if (parts[i].equals("int"))
+							atributo = 1;
+						if (parts[i].equals("char"))
+							atributo = 2;
+						if (parts[i].equals("fecha"))
+							atributo = 3;
+
+						//contraints: 0 = nada ,1 = primary key, 2 = Foreign key, 3 = Check
+						if (parts[i].equals("PK"))
+						{
+							if(countConstraint <2){
+								constraint[countConstraint] = 1;
+								countConstraint++;
+							}
 						}
+						if (parts[i].equals("FK"))
+							if(countConstraint <2){
+								constraint[countConstraint] = 2;
+								countConstraint++;
+							}
+						if (parts[i].equals("CHECK"))
+							if(countConstraint <2){
+								constraint[countConstraint] = 3;
+								countConstraint++;
+							}
 					}
-					if (parts[i].equals("FK"))
-						if(countConstraint <2){
-							constraint[countConstraint] = 2;
-							countConstraint++;
-						}
-					if (parts[i].equals("CHECK"))
-						if(countConstraint <2){
-							constraint[countConstraint] = 3;
-							countConstraint++;
-						}
-					}
+					currLine = br.readLine();
+				}
+
+				DataBase.table.get(currTable).agregarColumna(contenido, atributo,constraint);
 				currLine = br.readLine();
+				//LEE CONTENIDO
+				while(currLine != null){
+					for (int i = 0; i < columnas; i++) {
+						DataBase.table.get(currTable).columna.get(i % columnas).agregaContenido(currLine);
+					}
+
 				}
-				
-			DataBase.table.get(currTable).agregarColumna(contenido, atributo,constraint);
-			currLine = br.readLine();
-			//LEE CONTENIDO
-			while(currLine != null){
-				for (int i = 0; i < columnas; i++) {
-					DataBase.table.get(currTable).columna.get(i % columnas).agregaContenido(currLine);
-				}
-				
-			}
 			} catch (IOException e) {
 				System.out.println("Error en leerFile");
 			}
-			
+
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: Controlador, no logro leer el folder");
 			e.printStackTrace();
 		}
 	}
-	
+
 	private boolean checkFolder(String nameOfFolder) {
 		// TODO Auto-generated method stub
 		return false;
@@ -170,28 +165,32 @@ public class Controlador implements InterfaceDeControlador{
 
 	private void loadDatabase(String db) {
 		File[] files = dir.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            DataBase.createTable(files[i].getName());
-            leerFile(files[i].getName(), db, i);
-        }
-        
-		
+		for (int i = 0; i < files.length; i++) {
+			DataBase.createTable(files[i].getName());
+			leerFile(files[i].getName(), db, i);
+		}
+
+
 	}
 
 	private void printDatabase(String db) {
 		System.out.println("");
-		
+
 	}
-	
+
 	private boolean checkFile(String nameOfFolder, String FileName) {
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
+
 	private void writeDatabase(){
-		
+
+	}
+	
+	private int AtributoAInt(String atrb){
+		//TODO cambiar el string de atributos a int
+		return -1;
 	}
 
 
-	
 }

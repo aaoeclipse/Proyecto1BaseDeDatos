@@ -23,7 +23,7 @@ public class Table {
 	public void agregarColumna(String nombreDeColumna, int atributo, int[] givenConstr){
 		if (checkSiColumnaExiste(nombreDeColumna))
 			return;
-			
+		columna.add(new Columna(nombreDeColumna, atributo, givenConstr));
 	}
 
 	private boolean checkSiColumnaExiste(String nombreDeColumna){

@@ -7,6 +7,7 @@ public class Database {
 	ArrayList<Table> table = new ArrayList<Table>();
 	int contadorDeTablas;
 	String nombreDeBaseDatos;
+	int tablaBuscada;
 	
 	//constructor
 	public Database(String nombre){
@@ -30,13 +31,19 @@ public class Database {
 	public void setName(String name){
 		nombreDeBaseDatos = name;
 	}
+	public void createColum(String tables, String col, int atributo, int[] constraint){
+		if (checkTableName(tables)){
+			table.get(tablaBuscada).agregarColumna(col, atributo, constraint);
+		}
+	}
 
 	private boolean checkTableName(String name){
 		for(int i = 0; i < table.size();i++){
-			if (table.get(i).nombreDeLaTabla.equalsIgnoreCase(name))
-				return false;
+			if (table.get(i).nombreDeLaTabla.equalsIgnoreCase(name)){
+				tablaBuscada = i;
+				return true;			
+			}
 		}
-		return true;
+		return false;
 	}
-	
 }
