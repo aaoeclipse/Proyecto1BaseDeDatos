@@ -12,6 +12,7 @@ import ANTLR1.DATABASEParser.ChNombreContext;
 import ANTLR1.DATABASEParser.ColConstraintContext;
 import ANTLR1.DATABASEParser.ColNameContext;
 import ANTLR1.DATABASEParser.ColumnContext;
+import ANTLR1.DATABASEParser.ColumnDeclContext;
 import ANTLR1.DATABASEParser.ColumnListContext;
 import ANTLR1.DATABASEParser.ColumnNameContext;
 import ANTLR1.DATABASEParser.ColumnsUpdateContext;
@@ -33,6 +34,7 @@ import ANTLR1.DATABASEParser.PkNombreContext;
 import ANTLR1.DATABASEParser.PrimaryContext;
 import ANTLR1.DATABASEParser.RenameAlterContext;
 import ANTLR1.DATABASEParser.SelectListContext;
+import ANTLR1.DATABASEParser.ShowTableStmtContext;
 import ANTLR1.DATABASEParser.TableContext;
 import ANTLR1.DATABASEParser.TableNameContext;
 import ANTLR1.DATABASEParser.TipoContext;
@@ -100,9 +102,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		}
 		return nombre;
 	}
-	
+	//Revisar 	
 	@Override
-	public Object visitCreateTableStmt(JDSQLParser.CreateTableStmtContext ctx) {
+	public Object visitCreateTableStmt(CreateTableStmtContext ctx) {
             this.availableCols = new ArrayList<Column>();
             this.availableCons = new ArrayList<Constraint>();
             Table t1= new Table(); //Utilizamos el constructor vacio para dejar inicializada la variable
@@ -477,6 +479,66 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	}
 	
 	@Override
+	public Object visitColumnDecl(ColumnDeclContext ctx) {
+		//Creamos la columan dependiendo del type
+        String nombre = ctx.colName().getText();
+        int colType = 0;
+        Column c = new Column(null,0,0,tableCreate.nombre);
+        if(ctx.type().CHAR()!=null){
+            colType = Column.CHAR_TYPE;
+            int size = Integer.parseInt(ctx.type().NUM().getText());
+            c = new Column(nombre,colType,size,this.tableCreate.nombre);
+        }
+        else if(ctx.type().INT()!=null){
+            colType = Column.INT_TYPE;
+            c = new Column(nombre,colType,this.tableCreate.nombre);
+
+        }
+        else if(ctx.type().FLOAT()!=null){
+            colType =Column.FLOAT_TYPE;
+            c = new Column(nombre,colType,this.tableCreate.nombre);
+        }
+        else if(ctx.type().DATE()!=null){
+            colType = Column.DATE_TYPE;
+            c = new Column(nombre,colType,this.tableCreate.nombre);
+
+        }
+        return c;
+	}
+	
+	@Override
+	public Object visitShowTableStmt(ShowTableStmtContext ctx) {
+		if(DBMS.currentDB==null){
+            Frame.jTextArea2.setText("Error: No existe nin`guna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            return "Error";
+
+        }
+        String dbActual = DBMS.currentDB;
+        //ArraysList para crear el resultado a mostrar
+        ArrayList<String> tablesHere = DBMS.metaData.allTable(dbActual);
+        ArrayList<String> encabezado = new ArrayList<String>();
+        ArrayList<ArrayList<String>> filas = new ArrayList<ArrayList<String>>();
+        //Se recorre el arraylist obtenido del metodo para preparar las filas
+        encabezado.add("Tables in "+dbActual);
+        for(int i = 0; i<tablesHere.size(); i++){
+            ArrayList<String> temp = new ArrayList<String>();
+            temp.add(tablesHere.get(i));
+            filas.add(temp);
+        }
+        Resultados results = new Resultados(encabezado, filas);
+        for(Component i: Frame.forResults.getComponents()){
+            Frame.forResults.remove(i);
+        }
+        Frame.forResults.add(results);
+        Frame.forResults.revalidate();
+        Frame.forResults.repaint();
+        if(Frame.activateVerbose){
+            Frame.jTextArea2.append("Mostrando tables de "+dbActual);
+        }
+        return super.visitShowTableStmt(ctx);
+	}
+	
+	@Override
 	public Object visitVal(ValContext ctx) {
 		//Se debe agregar Column de la metadata para ver el tipo de valor se debe 
 		//reconocer que aqui pide la class columna.java, la cual debemos ingresar enuestra metadata
@@ -564,9 +626,6 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		// TODO Auto-generated method stub
 		return super.visitNewName(ctx);
 	}
-	public Visitor() {
-		// TODO Auto-generated constructor stub
-	}
 	
 	@Override
 	public Object visitTable(TableContext ctx) {
@@ -610,6 +669,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		return super.visitSelectList(ctx);
 	}
 	@Override
+	
 	public Object visitChNombre(ChNombreContext ctx) {
 		// TODO Auto-generated method stub
 		return super.visitChNombre(ctx);
