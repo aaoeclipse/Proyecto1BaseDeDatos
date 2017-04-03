@@ -86,7 +86,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		
 		try{
 			//Se debe remplazar DB por nuestra clase de manej de bases de datos
-			DB database = new db(nombre);
+			Database database = new Database(nombre);
 			Debug.add("\n Base de datos "+ nombre + " creada exitosamente.");
 			if(!frame.activateVerbose){
 				Frame.jTextArea2.setText("\n Base de datos " + nombre + " creada exitosamente.");
