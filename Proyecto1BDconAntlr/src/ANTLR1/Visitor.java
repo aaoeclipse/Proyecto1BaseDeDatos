@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import ANTLR1.DATABASEBaseVisitor;
+import ANTLR1.DATABASEParser.AccionAlterContext;
+import ANTLR1.DATABASEParser.AccionContext;
 import ANTLR1.DATABASEParser.AlterDbStmtContext;
 import ANTLR1.DATABASEParser.AlterNameContext;
 import ANTLR1.DATABASEParser.ChNombreContext;
@@ -34,7 +36,9 @@ import ANTLR1.DATABASEParser.PkNombreContext;
 import ANTLR1.DATABASEParser.PrimaryContext;
 import ANTLR1.DATABASEParser.RenameAlterContext;
 import ANTLR1.DATABASEParser.SelectListContext;
+import ANTLR1.DATABASEParser.ShowColumnsStmtContext;
 import ANTLR1.DATABASEParser.ShowTableStmtContext;
+import ANTLR1.DATABASEParser.SingleColConstraintContext;
 import ANTLR1.DATABASEParser.TableContext;
 import ANTLR1.DATABASEParser.TableNameContext;
 import ANTLR1.DATABASEParser.TipoContext;
@@ -507,6 +511,368 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	}
 	
 	@Override
+	public Object visitShowColumnsStmt(ShowColumnsStmtContext ctx) {
+		String nameTable = ctx.ID().getText();
+        //Se carga la metadata de la table que se desea mostrar
+        DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
+        TableMetaData tm=d.findTable(nameTable);
+        if(tm == null){
+            Frame.jTextArea2.setText("Error: La table  "+nameTable+" no existe dentro de "+DBMS.currentDB);
+            return "Error";
+        }
+        ArrayList<String> titulos1 = new ArrayList<String>();
+        ArrayList<String> titulos2 = new ArrayList<String>();
+        ArrayList<ArrayList<String>> filas1 = new ArrayList();
+        ArrayList<ArrayList<String>> filas2 = new ArrayList();
+        //se carga los titulos para la primera table
+        titulos1.add("Column Nombre");
+        titulos1.add("Column Type");
+        titulos2.add("Constraint Nombre");
+        titulos2.add("Constraint Type");
+        titulos2.add("Constraint Description");
+        //se cargan las filas para las columns que se desean mostrar
+        for (ColumnMetaData column : tm.columns) {
+            ArrayList<String> temp = new ArrayList<String>();
+            temp.add(column.name);
+            temp.add(column.type);
+            filas1.add(temp);
+        }
+        //Se cargan las filas para los contraints
+        for(ConstraintMetaData constraint: tm.constraints){
+            ArrayList<String> temp = new ArrayList<String>();
+            temp.add(constraint.name);
+            temp.add(constraint.type);
+            temp.add(constraint.decripcion);
+            filas2.add(temp);
+        }
+        Resultados result = new Resultados(titulos1,filas1,titulos2,filas2);
+        for(Component i: Frame.forResults.getComponents()){
+            Frame.forResults.remove(i);
+        }
+
+        Frame.forResults.add(result);
+        Frame.forResults.revalidate();
+        Frame.forResults.repaint();
+
+        if(Frame.activateVerbose){
+            Frame.jTextArea2.append("Mostrando columnas de "+nameTable);
+        }
+        return super.visitShowColumnsStmt(ctx);
+	}
+	
+	@Override
+	public Object visitRenameAlter(RenameAlterContext ctx) {
+		//Se verifica si hay una database en uso
+		Debug.add("Buscando la base de datos en uso");
+
+        if(DBMS.currentDB==null){
+            Debug.add("Error: No existe ninguna base de datos en uso. Utilice USE DATABASE <nombre> para utilizar una base de datos existente.");
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("Error: No existe ninguna base de datos en uso. Utilice USE DATABASE <nombre> para utilizar una base de datos existente.");
+            }
+            return "Error";
+
+        }
+        String oldName = ctx.alterName().getText();
+        String newName= ctx.newName().getText();
+
+        Debug.add("Buscando la table");
+
+        Table t = Table.loadTable(oldName);
+        if(t==null){
+            Debug.add("ERROR: No se encuentra la table: "+oldName);
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("ERROR: No se encuentra la table: "+oldName);
+            }
+            return "Error";
+
+        }
+
+        Debug.add("Alterando la metadata...");
+
+        DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
+        TableMetaData tm=d.findTable(oldName);
+        tm.name=newName;
+        t.renameTo(newName);
+        DBMS.metaData.writeMetadata();
+        DBMS.guardar();
+            Debug.add("Table: "+oldName+" renombrada a : '"+newName);
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("Table: "+oldName+" renombrada a : '"+newName);
+            }
+        return t;
+	}
+	
+	@Override
+	public Object visitAccionAlter(AccionAlterContext ctx) {
+		Debug.add("Buscando la base de datos en uso");
+
+        if(DBMS.currentDB==null){
+          Debug.add("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            }
+            return "ERROR";
+
+        }
+        String tableName = ctx.alterName().getText();
+        this.tableCreate = Table.loadTable(tableName);
+        DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
+        TableMetaData t = d.findTable(tableName);
+        this.tableCreateMetaData =t;
+        if(tableCreate == null){
+            Debug.add("ERROR: No se encuentra la table: "+tableName);
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("ERROR: No se encuentra la table: "+tableName);
+            }
+            return "ERROR";
+        }
+        for(ParseTree n: ctx.accion()){
+            Object accion = visit(n);
+            if(accion instanceof String){
+                return "ERROR";
+            }
+        }
+        //Guardamos la table con los nuevos cambios
+
+        Debug.add("Alterando la metadata...");
+
+        tableCreate.guardarTabla();
+        DBMS.metaData.writeMetadata();
+        DBMS.guardar();
+          Debug.add("Table alterada correctamente. Se realizaron: "+ctx.accion().size()+" alteraciones-");
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("Table alterada correctamente. Se realizaron: "+ctx.accion().size()+" alteraciones-");
+            }
+        return true;
+	}
+	
+	@Override
+	public Object visitAccion(AccionContext ctx) {
+		//Si es add Column
+        this.availableCons = tableCreate.constraints;
+        this.availableCols = tableCreate.columns;
+        this.colsCreate = tableCreate.columns;
+        if(ctx.ADD()!=null && ctx.COLUMN()!=null){
+            String colName = ctx.columnName().getText();
+            Object type = visit(ctx.type());
+
+            if(type instanceof String){
+                Debug.add("Error: type invalido al add columna");
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("Error: type invalido al add columna");
+                }
+                return "Error";
+            }
+            int tipo1 = (Integer) type;
+
+            Debug.add("Verificando existencia de nueva columna");
+
+            Column yaExiste = getColumn(colName,this.tableCreate.columns);
+            if(yaExiste!=null){
+                Debug.add("Error: La columna: <<"+colName+">> Fue especificada mas de una vez");
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("Error: La columna: <<"+colName+">> Fue especificada mas de una vez");
+                }
+
+                return "Error";
+            }
+            // Creando la column
+            Column c;
+
+            Debug.add("Creando la columna...");
+
+            if(tipo1==Column.CHAR_TYPE){
+                int size = Integer.parseInt(ctx.type().NUM().getText());
+                 c = new Column(colName,tipo1,size,tableCreate.name);
+                 this.addedCol=c;
+            }
+            else{
+                 c = new Column (colName,tipo1,tableCreate.name);
+                 this.addedCol=c;
+            }
+
+            //Verificando si existen contratins
+            ArrayList<Constraint> nuevasConstraints = new ArrayList<Constraint>();
+            if(ctx.singleColConstraint()!=null){
+                // Asignando las constraints creadas a las disponibles para verificar cosntraints duplicadas
+
+                Debug.add("Agregando restricciones de columna...");
+
+                this.colsCreate.add(c); //Agregamos la nueva column
+                this.availableCols= this.colsCreate; // Agregamos a columns disponibles para el caso en que haya un CHECK ( expression) con un term como column
+                for(ParseTree n: ctx.singleColConstraint()){
+                    Object cons = visit(n);
+                    if(!(cons instanceof Constraint)){
+                        return "Error";
+                    }
+                    Constraint cons1 = (Constraint)cons;
+                    nuevasConstraints.add(cons1);
+
+
+                }
+                // Verificamos si alguna constraint es primary key y si hay alguna tuple, no permitimos add la column porque habran values nulos en una pk
+                for(Constraint cs: nuevasConstraints){
+                    if(cs.type==Constraint.PK && this.tableCreate.tuples.size()>0){
+                        Debug.add("Error: no se puede insertar primary key : <<"+cs.name+">> porque se crearan values nulos en la table ");
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("Error: no se puede insertar primary key : <<"+cs.name+">> porque se crearan values nulos en la table ");
+                        }
+                    }
+                    if(cs.type==Constraint.CHECK){
+                        Table temp = new Table();
+                        temp.name = tableCreate.name;
+                        temp.columns.addAll(tableCreate.columns);
+                        temp.tuples.addAll(tableCreate.tuples);
+                        Loader.iterator = new TableIterator(temp,0);
+                        for(int i =0; i<Loader.iterator.table.tuples.size();i++){
+                            try {
+                            if(cs.expr.isTrue() == null || !cs.expr.isTrue()){
+                                Debug.add("Error: no se puede insertar constraint <<"+cs.name+">> porque algunas tuples no cumplen con la restriccion.");
+                                if(!Frame.activateVerbose){
+                                    Frame.jTextArea2.setText("Error: no se puede insertar constraint <<"+cs.name+">> porque algunas tuples no cumplen con la restriccion.");
+                                }
+
+                                return "Error";
+                            }
+                            } catch (Exception ex) {
+                                Logger.getLogger(Loader.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+
+                    }
+
+                }
+
+
+
+
+                /*
+                 si ya hay tuples en la table y no habia PK, se agrega a cada tuple el value nulo
+                */
+                ArrayList<Tuple> tuples = this.tableCreate.tuples;
+                for(Tuple fila: tuples){
+                    fila.values.add(null);
+                }
+
+                // Agregamos la nueva column a la metaData
+                ColumnMetaData cm= new ColumnMetaData(c.name,c.getStringType(c.type));
+                this.tableCreateMetaData.columns.add(cm);
+                //Agregamos las nuevas constraints a la table
+                this.tableCreate.constraints.addAll(nuevasConstraints);
+                //Agregamos las nuevas constraints a la metaData
+                for(Constraint cons: nuevasConstraints){
+                    ConstraintMetaData consm = new ConstraintMetaData(cons.name,cons.getStringType(cons.type),cons.toString());
+                    tableCreateMetaData.constraints.add(consm);
+                }
+                return true;
+            }
+        }
+        // Si es add constraint
+        else if (ctx.ADD()!= null && ctx.CONSTRAINT()!= null){
+            Object c = visit(ctx.colConstraint());
+            if(!(c instanceof Constraint)){
+                return "Error";
+
+            }
+
+            Debug.add("Agregando restricciones...");
+
+            Constraint c1 = (Constraint)c;
+            ConstraintMetaData cmt = new ConstraintMetaData(c1.name,c1.getStringType(c1.type),c1.toString());
+            tableCreate.constraints.add(c1);
+            this.tableCreateMetaData.constraints.add(cmt);
+            return true;
+        }
+        // Si es drop column
+        else if(ctx.DROP()!= null && ctx.COLUMN()!= null){
+            String colName = ctx.columnName().getText();
+            //Verificamos que la column exista
+
+            Debug.add("Buscando restriccion para eliminar...");
+
+            Column yaExiste = getColumn(colName,this.tableCreate.columns);
+            if(yaExiste==null){
+                Debug.add("Error: no se encuentra la columna <<"+colName+">> en la table: "+tableCreate.columns);
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("Error: no se encuentra la columna <<"+colName+">> en la table: "+tableCreate.columns);
+                }
+                return "Error";
+            }
+
+            //Revisar que no existan refs en llaves foraneas de otras tables
+
+            Debug.add("Verificando refs en otras tables");
+
+            ArrayList<Constraint> allForeignConstraints = getAllForeignConstraints();
+            Constraint hasReferences = getReferences(colName,tableCreate.name,allForeignConstraints);
+            if(hasReferences !=null){
+                Debug.add("Error: No se puede eliminar <<"+colName+">> porque existe la referencia <<"+hasReferences.name+">> en la table: "+hasReferences.table);
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("Error: No se puede eliminar <<"+colName+">> porque existe la referencia <<"+hasReferences.name+">> en la table: "+hasReferences.table);
+                }
+                return "Error";
+            }
+            //Veriicamos si la table tiene un primary key con la column especificada y si existe eliminamos la llave
+            Constraint consPK = tableCreate.containsPKWithColumn(yaExiste);
+            if(consPK!=null){
+                tableCreate.eliminarConstraint(consPK.name);
+
+            }
+
+            //Elimnamos la column correspondiente a la fila en cada tuple y la column como atributo de la table y del metadata
+            tableCreate.eliminarColumna(yaExiste);
+            return true;
+        }
+        // si es drop constraint
+        else if(ctx.DROP()!= null && ctx.CONSTRAINT()!= null){
+            String consName = ctx.ID().getText();
+            Constraint yaExiste = this.getConstraint(consName, tableCreate.constraints);
+            if(yaExiste==null){
+                Debug.add("Error: no se encuentra la constraint <<"+consName+">> en la table: "+tableCreate.columns);
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("Error: no se encuentra la constraint <<"+consName+">> en la table: "+tableCreate.columns);
+                }
+
+                return "Error";
+            }
+
+             Debug.add("Verificando refs en otras tables");
+
+            //Si la constraint es primary key, revisamo refs a otras tables de las columns de la pk
+            if(yaExiste.type == Constraint.PK){
+                ArrayList<Column> columns = yaExiste.colsPkeys;
+                ArrayList<Constraint> allForeignConstraints = getAllForeignConstraints();
+                for(Column col1: columns){
+                    Constraint hasReferences = getReferences(col1.name,tableCreate.name,allForeignConstraints);
+                    if(hasReferences !=null){
+                        Debug.add("Error: No se puede eliminar la constraint PK: <<"+col1.name+">> porque existe la referencia <<"+hasReferences.name+">> en la table: "+hasReferences.table);
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("Error: No se puede eliminar la constraint PK: <<"+col1.name+">> porque existe la referencia <<"+hasReferences.name+">> en la table: "+hasReferences.table);
+                        }
+                        return "Error";
+                    }
+                }
+
+            }
+            tableCreate.eliminarConstraint(consName);
+            return true;
+
+
+        }
+        else{
+            return "Error";
+        }
+        return "Error";
+	}
+	
+	@Override
+	public Object visitSingleColConstraint(SingleColConstraintContext ctx) {
+		// TODO Auto-generated method stub
+		return super.visitSingleColConstraint(ctx);
+	}
+	
+	@Override
 	public Object visitShowTableStmt(ShowTableStmtContext ctx) {
 		if(DBMS.currentDB==null){
             Frame.jTextArea2.setText("Error: No existe nin`guna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
@@ -560,7 +926,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         else if(ctx.NULL()!=null){
             return -1;
         }
-        else{return "ERROR";}
+        else{return "Error";}
 	}
 	
 	@Override
@@ -579,7 +945,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		                    return Column.FLOAT_TYPE;
 		                }
 		                else{
-		                    return "ERROR";
+		                    return "Error";
 		                }
 	}
 
