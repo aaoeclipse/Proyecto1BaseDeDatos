@@ -8,8 +8,8 @@ public interface InterfaceDeControlador {
 	public boolean createTable(String table, String db); //ya
 	public boolean createColumna(String db, String table, String colName, int atributo, int[] constraint); //ya
 	public boolean alterDatabase(String dbViejo, String dbNuevo); //TODO hacer check si existe la base de datos
+	public boolean dropDatabase(String db); //TODO hacer check si existe la base de datos
 	// ====== TODO ===== //
-	public boolean dropDatabase();
 	public boolean dropTable();
 	public boolean showDatabase();
 	public boolean showTable();

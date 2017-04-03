@@ -79,12 +79,78 @@ public class Controlador implements InterfaceDeControlador{
 
 	@Override
 	public boolean alterDatabase(String dbViejo, String dbNuevo) {
-		//TODO check si la base de datos existe
+		if (existeDatabase(dbViejo))
+			return false;
 		dir = new File(workingDir + "/" + archivoMaestro + "/" + dbViejo);
 		dir.renameTo(new File(workingDir + "/" + archivoMaestro + "/" + dbNuevo));
 		return true;
 
 	}
+	
+
+	@Override
+	public boolean dropDatabase(String db) {
+		if (existeDatabase(db))
+			return false;
+		dir = new File(workingDir + "/" + archivoMaestro + "/" + db);
+		dir.delete();
+		return true;
+	}
+
+	@Override
+	public boolean dropTable() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean showDatabase() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean showTable() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean showColum() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean useDatabase() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean select() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean update() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean insert() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean multiInsert() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 
 	//==============Clases Privadas===========/
 
@@ -157,40 +223,18 @@ public class Controlador implements InterfaceDeControlador{
 		}
 	}
 
-	private boolean checkFolder(String nameOfFolder) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-
 	private void loadDatabase(String db) {
 		File[] files = dir.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			DataBase.createTable(files[i].getName());
 			leerFile(files[i].getName(), db, i);
 		}
-
-
 	}
 
-	private void printDatabase(String db) {
-		System.out.println("");
-
-	}
-
-	private boolean checkFile(String nameOfFolder, String FileName) {
-		// TODO Auto-generated method stub
+	private boolean existeDatabase(String db){
+		
 		return false;
 	}
-
-	private void writeDatabase(){
-
-	}
 	
-	private int AtributoAInt(String atrb){
-		//TODO cambiar el string de atributos a int
-		return -1;
-	}
-
-
+	
 }
