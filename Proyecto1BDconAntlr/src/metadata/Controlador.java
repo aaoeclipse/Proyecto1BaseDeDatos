@@ -109,9 +109,14 @@ public class Controlador implements InterfaceDeControlador{
 	}
 
 	@Override
-	public boolean showDatabase() {
-		// TODO Auto-generated method stub
-		return false;
+	public String[][] showDatabase(String db) {
+		String [][] dbEnMatriz = null;
+		if (!readDatabase(db)){
+			System.out.println("Error en showDatabase: base de datos no encontrada");
+			return dbEnMatriz;
+		}
+		dbEnMatriz = DataBase.matrizDataBase();
+		return dbEnMatriz;
 	}
 
 	//	Devuelve la tabla por columna en un array. Cada elemento en el array es un string con primero el nombre
@@ -154,11 +159,13 @@ public class Controlador implements InterfaceDeControlador{
 	@Override
 	public boolean useDatabase() {
 		// TODO Auto-generated method stub
+		//if (readDatabase(db))
+		//	return true;
 		return false;
 	}
 
 	@Override
-	public boolean select() {
+	public boolean select(String db, String table, String Col) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -265,6 +272,6 @@ public class Controlador implements InterfaceDeControlador{
 		
 		return false;
 	}
-	
+
 	
 }

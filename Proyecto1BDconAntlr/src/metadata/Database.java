@@ -8,7 +8,7 @@ public class Database {
 	int contadorDeTablas;
 	String nombreDeBaseDatos;
 	int tablaBuscada;
-	
+
 	//constructor
 	public Database(String nombre){
 		contadorDeTablas = 0;
@@ -25,9 +25,9 @@ public class Database {
 		}
 		table.add(new Table(name));
 		contadorDeTablas++;
-		
+
 	}
-	
+
 	public void setName(String name){
 		nombreDeBaseDatos = name;
 	}
@@ -45,7 +45,13 @@ public class Database {
 		}
 		return false;
 	}
-	
-	
+	public String[][] matrizDataBase(){
+		String [][] matrizParaRegresar = new String [table.size()][];
+		for (int i = 0; i < table.size();i++){
+			matrizParaRegresar[i] = table.get(i).readTable();
+		}
+		return matrizParaRegresar;
+	}
+
 
 }
