@@ -10,6 +10,7 @@ import ANTLR1.DATABASEParser.AccionAlterContext;
 import ANTLR1.DATABASEParser.AccionContext;
 import ANTLR1.DATABASEParser.AlterDbStmtContext;
 import ANTLR1.DATABASEParser.AlterNameContext;
+import ANTLR1.DATABASEParser.AndexprContext;
 import ANTLR1.DATABASEParser.ChNombreContext;
 import ANTLR1.DATABASEParser.ColConstraintContext;
 import ANTLR1.DATABASEParser.ColNameContext;
@@ -18,30 +19,41 @@ import ANTLR1.DATABASEParser.ColumnDeclContext;
 import ANTLR1.DATABASEParser.ColumnListContext;
 import ANTLR1.DATABASEParser.ColumnNameContext;
 import ANTLR1.DATABASEParser.ColumnsUpdateContext;
+import ANTLR1.DATABASEParser.CompareExprContext;
 import ANTLR1.DATABASEParser.CreateDbStmtContext;
 import ANTLR1.DATABASEParser.CreateTableStmtContext;
 import ANTLR1.DATABASEParser.DbNameContext;
 import ANTLR1.DATABASEParser.DdlQueryContext;
+import ANTLR1.DATABASEParser.DeleteStmtContext;
 import ANTLR1.DATABASEParser.DmlQueryContext;
 import ANTLR1.DATABASEParser.DropDbStmtContext;
+import ANTLR1.DATABASEParser.DropTableStmtContext;
 import ANTLR1.DATABASEParser.ExpressionContext;
 import ANTLR1.DATABASEParser.FactorContext;
 import ANTLR1.DATABASEParser.FkNombreContext;
 import ANTLR1.DATABASEParser.IdTablaContext;
+import ANTLR1.DATABASEParser.InsertStmtContext;
+import ANTLR1.DATABASEParser.MultiInsertContext;
 import ANTLR1.DATABASEParser.NewDbNameContext;
 import ANTLR1.DATABASEParser.NewNameContext;
 import ANTLR1.DATABASEParser.OrderExprContext;
 import ANTLR1.DATABASEParser.OrderTermContext;
 import ANTLR1.DATABASEParser.PkNombreContext;
 import ANTLR1.DATABASEParser.PrimaryContext;
+import ANTLR1.DATABASEParser.QueryContext;
 import ANTLR1.DATABASEParser.RenameAlterContext;
 import ANTLR1.DATABASEParser.SelectListContext;
+import ANTLR1.DATABASEParser.SelectStmtContext;
 import ANTLR1.DATABASEParser.ShowColumnsStmtContext;
+import ANTLR1.DATABASEParser.ShowDbStmtContext;
 import ANTLR1.DATABASEParser.ShowTableStmtContext;
 import ANTLR1.DATABASEParser.SingleColConstraintContext;
 import ANTLR1.DATABASEParser.TableContext;
 import ANTLR1.DATABASEParser.TableNameContext;
+import ANTLR1.DATABASEParser.TermContext;
 import ANTLR1.DATABASEParser.TipoContext;
+import ANTLR1.DATABASEParser.UpdateStmtContext;
+import ANTLR1.DATABASEParser.UseDbStmtContext;
 import ANTLR1.DATABASEParser.ValContext;
 import ANTLR1.DATABASEParser.ValueListContext;
 
@@ -866,12 +878,1730 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         return "Error";
 	}
 	
+	//*******************************************************************************************************************************
+	//Revisar bien esta parte
+
 	@Override
 	public Object visitSingleColConstraint(SingleColConstraintContext ctx) {
-		// TODO Auto-generated method stub
-		return super.visitSingleColConstraint(ctx);
+		Debug.add("Agregando restriccion de column...");
+
+        if(ctx.PRIMARY()!=null){
+            String name = ctx.pkNombre().getText();
+            //Revisamos que no exista una primary key en las constraints declaradas antes
+            boolean hay_pk = hasPK(availableCons);
+
+             Debug.add("Verificando existencia de otros primary keys...");
+
+
+            if(hay_pk){
+                Debug.add("ERROR: No es posible declarar dos primary keys. En la table: "+tableCreate.name);
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("ERROR: No es posible declarar dos primary keys. En la table: "+tableCreate.name);
+                }
+
+                return "ERROR";
+            }
+            //No hacemos ninguna revision si la column existe  pues esta siendo agregada en este momento.
+
+            //Creamos constraint
+            ArrayList<Column> pkCols = new ArrayList<Column>();
+            pkCols.add(this.addedCol);
+            // Verificamos que no existan values agregados, porque sino se agregaran values nulos a la primary key
+            if(tableCreate.tuples.size()>0){
+                Debug.add("ERROR: La constraint no puede ser agregada porque habran values nulos para la column: "+this.addedCol.name);
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("ERROR: La constraint no puede ser agregada porque habran values nulos para la column: "+this.addedCol.name);
+                }
+                return "ERROR";
+            }
+            Debug.add("Creando constraint...");
+
+            Constraint c = new Constraint(name,Constraint.PK,pkCols,tableCreate.name);
+            //Verificamos que no exista una constraint del mismo type con el mismo name
+
+            Debug.add("Verificando que el name de la constraint no exista...");
+
+            boolean existeConstraint = getConstraint(c,this.availableCons);
+            if(existeConstraint){
+                    Debug.add("ERROR: La constraint  "+c.name+" Ya fue declarada "+tableCreate.name);
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: La constraint  "+c.name+" Ya fue declarada "+tableCreate.name);
+                    }
+                    return "ERROR";
+            }
+            return c;
+        }
+        else if(ctx.REFERENCES()!=null){
+            String name = ctx.fkNombre().getText();
+            //Revisando que existan los name de las columns en la table local
+            ArrayList<Column> localCols = new ArrayList<Column>();
+            localCols.add(addedCol);
+            //Obteniendo la table que referencia
+            String refTable = ctx.idTabla().getText();
+
+            Debug.add("Buscando table de referencia...");
+
+
+            DBMetaData bd = DBMS.metaData.getDB(DBMS.currentDB);
+            TableMetaData t = bd.findTable(refTable);
+            if(t==null){
+                    Debug.add("ERROR: No se encuentra la table de referencia: "+refTable);
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: No se encuentra la table de referencia: "+refTable);
+                    }
+                    return "ERROR";
+            }
+            else{
+                // Si encontramos la table Cargamos las constraint foraneas
+                ArrayList<Constraint> foreignConstraints = Table.loadConstraints(refTable);
+                ArrayList<Column> fkCols = new ArrayList<Column>();
+                ArrayList<Column> cols = Table.loadColums(refTable);
+                //Buscamos las columns de la primary key de la table foranea
+                ArrayList<Column> columnasPrimary = new ArrayList<Column>();
+                for(Constraint c1: foreignConstraints){
+                    if(c1.type == Constraint.PK){
+                        columnasPrimary.addAll(c1.colsPkeys);
+                    }
+                }
+                if(cols==null){
+                    Debug.add("ERROR: No se encuentra el archivo de columns de la table de referencia: "+refTable);
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: No se encuentra el archivo de columns de la table de referencia: "+refTable);
+                    }
+                    return "ERROR";
+                }
+
+                String text = ctx.refids().getText();
+                //Buscamos las columns de la table foranea
+                if(cols==null){
+                    Debug.add("ERROR: No se encuentra el archivo de columns de la table de referencia: "+refTable);
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: No se encuentra el archivo de columns de la table de referencia: "+refTable);
+                    }
+                    return "ERROR";
+                }
+                Column found = getColumn(text,cols);
+                if(found==null){
+                    Debug.add("ERROR: No se encuentra la column: "+text+" En la table: "+refTable);
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: No se encuentra la column: "+text+" En la table: "+refTable);
+                    }
+
+                    return "ERROR";
+                }
+                else{
+
+                    Debug.add("Verificando que las columns pertenezcan a PK...");
+
+                    //Si encontramos la column, verificamos que la column pertenezca al primary key de la table externa para garantizar que la llave sea unica
+                    Column encontrada2 = getColumn(found.name,columnasPrimary);
+                    if(encontrada2==null){
+                        Debug.add("ERROR: No se puede crear la llave foranea. La column de referecia: "+found.name+" No es unica ");
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: No se puede crear la llave foranea. La column de referecia: "+found.name+" No es unica ");
+                        }
+                        return "ERROR";
+                    }
+                    //Agregamos la column
+                    fkCols.add(found);
+
+                }
+
+                Debug.add("Verificando columns de la llave foranea...");
+
+                //Una vez obtenidos los dos arreglos de columns verificamos que tengan el mismo tamaño
+                if(fkCols.size()!=localCols.size()){
+                    Debug.add("ERROR: El numero de columns locales y remotas en la foregin key debe ser el mismo");
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: El numero de columns locales y remotas en la foregin key debe ser el mismo");
+                    }
+                    return "ERROR";
+                }
+                //Si los arreglos son iguales verificamos que tengan los mismos type
+                for(int i =0;i<localCols.size();i++){
+                    Column local = localCols.get(i);
+                    Column foreign = fkCols.get(i);
+                    if(local.type!=foreign.type){
+                        Debug.add("ERROR: las columns: '"+local.name+", "+foreign.name+"' Deben tener el mismo type");
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: las columns: '"+local.name+", "+foreign.name+"' Deben tener el mismo type");
+                        }
+                        return "ERROR";
+
+                    }
+                }
+
+                Debug.add("Creando constraint...");
+
+                //Si todas las columns tienen los mismo tipos, procedemos a crear la constraint
+                Constraint c = new Constraint(name,Constraint.FK,localCols,fkCols,refTable,this.tableCreate.name);
+                //Verificamos que no exista una constraint del mismo type con el mismo name
+                boolean existeConstraint = getConstraint(c,this.availableCons);
+                if(existeConstraint){
+                        Debug.add("ERROR: La constraint  "+c.name+" Ya fue declarada "+tableCreate.name);
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: La constraint  "+c.name+" Ya fue declarada "+tableCreate.name);
+                        }
+                        return "ERROR";
+                }
+                return c;
+            }
+        }
+        else if(ctx.CHECK()!= null){
+            String name= ctx.chNombre().getText();
+            //Obtenemos la expresion del CHECK
+            Object e = visit(ctx.expression());
+            String expr = ctx.expression().getText();
+            //Verificamos que no existan errores en la expresion para poder castear
+            if(! (e instanceof Expression)){
+                return "ERROR";
+
+            }
+
+            Debug.add("Creando constraint...");
+            Expression e1 = (Expression)e;
+            //Verificamos que las tuples actuales de la table cumplan con la restriccion
+            Table temp = new Table();
+            temp.name = tableCreate.name;
+            temp.columns.addAll(tableCreate.columns);
+            temp.tuples.addAll(tableCreate.tuples);
+            Loader.iterator = new TableIterator(temp,0);
+            for(int i =0; i<Loader.iterator.table.tuples.size();i++){
+                try {
+                if(!e1.isTrue()){
+                    Debug.add("ERROR: no se puede insertar constraint <<"+name+">> porque algunas tuples no cumplen con la restriccion.");
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: no se puede insertar constraint <<"+name+">> porque algunas tuples no cumplen con la restriccion.");
+                    }
+                    return "ERROR";
+                }
+                } catch (Exception ex) {
+                    Logger.getLogger(Loader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            Constraint c = new Constraint(name,Constraint.CHECK,e1,tableCreate.name,expr);
+            //Verificamos que no exista una constraint del mismo type con el mismo name
+
+             Debug.add("Buscando constraint repetida....");
+
+            boolean existeConstraint = getConstraint(c,this.availableCons);
+
+            if(existeConstraint){
+                    Debug.add("ERROR: La constraint  "+c.name+" Ya fue declarada "+tableCreate.name);
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: La constraint  "+c.name+" Ya fue declarada "+tableCreate.name);
+                    }
+
+                    return "ERROR";
+            }
+            return c;
+
+        }
+
+        return "ERROR";
 	}
 	
+	
+	//*******************************************************************************************************************************
+	//revisar bien esta aprte
+	@Override
+	public Object visitMultiInsert(MultiInsertContext ctx) {
+		this.tablesInsert = new ArrayList<Table>();
+        this.regsInsert = new ArrayList<Integer>();
+         if(DBMS.currentDB==null){
+             Debug.add("Error: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+             if(!Frame.activateVerbose){
+                 Frame.jTextArea2.setText("Error: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+             }
+
+             return "Error";
+
+         }
+        int size = ctx.insertStmt().size();
+        int i =0;
+        for(ParseTree n: ctx.insertStmt()){
+            Debug.add("Insertando registro #"+i);
+
+            Object x = visit(n);
+            if(x instanceof String){
+                 Debug.add("\n Error en insert no."+getTotalregs());
+                 if(!Frame.activateVerbose){
+                     Frame.jTextArea2.setText("\n Error en insert no."+getTotalregs());
+                 }
+
+                 return "Error";
+            }
+            addRegInsert(this.tableCreate.name);
+        }
+
+         for(Table ti: this.tablesInsert){
+             DBMetaData bd = DBMS.metaData.getDB(DBMS.currentDB);
+             TableMetaData tm = bd.findTable(ti.name);
+             tm.cantRegistros= tm.cantRegistros+getRegNumber(ti.name);
+             ti.guardarTabla();
+             DBMS.metaData.writeMetadata();
+             DBMS.guardar();
+         }
+             Debug.add("Insert ("+size+") registros con exito.");
+             if(!Frame.activateVerbose){
+                 Frame.jTextArea2.setText("Insert ("+size+") registros con exito.");
+             }
+
+        return true;
+
+    }
+    public int getTotalregs(){
+        int k =0;
+        for(int a : this.regsInsert){
+            k+=a;
+        }
+        return k;
+    }
+    public int getRegNumber(String s){
+         int i =0;
+          for(Table t: this.tablesInsert){
+            if(t.name.equalsIgnoreCase(s)){
+                return this.regsInsert.get(i);
+            }
+            i++;
+        }
+          return -1;
+    }
+    public void addRegInsert(String s){
+        int i =0;
+          for(Table t: this.tablesInsert){
+            if(t.name.equalsIgnoreCase(s)){
+                this.regsInsert.set(i, this.regsInsert.get(i)+1);
+            }
+            i++;
+        }
+    }
+    public boolean containsTableInsert(String s){
+        for(Table t: this.tablesInsert){
+            if(t.name.equalsIgnoreCase(s)){
+                return true;
+            }
+        }
+        return false;
+    }
+    public Table getTableInsert(String s){
+        for(Table t: this.tablesInsert){
+            if(t.name.equalsIgnoreCase(s)){
+                return t;
+            }
+        }
+        return null;
+    }
+
+	//*******************************************************************************************************************************
+	//revisar bien esta parte
+    @Override
+    public Object visitInsertStmt(InsertStmtContext ctx) {
+    	ArrayList<Object> values = new ArrayList<Object>();
+        ArrayList<Integer> tipos = new ArrayList<Integer>();
+       //Cargamos la table donde se insertara la tuple
+       String tableName = ctx.table().getText();
+       if(this.tableCreate== null){
+           this.tableCreate = Table.loadTable(tableName);
+           this.tablesInsert.add(tableCreate);
+           this.regsInsert.add(0);
+       }
+       else if (!tableName.equalsIgnoreCase(tableCreate.name) && ! containsTableInsert(tableName)){
+
+           this.tableCreate = Table.loadTable(tableName);
+           this.tablesInsert.add(tableCreate);
+           this.regsInsert.add(0);
+       }
+       else if (tableName.equalsIgnoreCase(tableCreate.name)){
+
+       }
+       else if (!tableName.equalsIgnoreCase(tableCreate.name) &&  containsTableInsert(tableName)){
+
+           this.tableCreate = getTableInsert(tableName);
+
+       }
+       else{
+           this.tableCreate = null;
+       }
+       Table t = this.tableCreate;
+           if(t==null){
+           Debug.add("ERROR: No se encuentra la table: "+tableName);
+           if(!Frame.activateVerbose){
+               Frame.jTextArea2.setText("ERROR: No se encuentra la table: "+tableName);
+           }
+
+           return "ERROR";
+       }
+        //Verificamos si hay columns especificadas
+       if(ctx.columnList()!=null){
+           ArrayList<Column> columnasEspecificadas= new ArrayList<Column>();
+           //Obtenemos las columns que se especificaron
+           for(ParseTree n: ctx.columnList().colName()){
+               String colName = n.getText();
+               Column existe = this.getColumn(colName, t.columns);
+               if(existe == null){
+
+                   Debug.add("ERROR: No se encuentra la Column: <<"+colName+">> en la table: "+tableName);
+                   if(!Frame.activateVerbose){
+                       Frame.jTextArea2.setText("ERROR: No se encuentra la Column: <<"+colName+">> en la table: "+tableName);
+                   }
+
+                   return "ERROR";
+               }
+               columnasEspecificadas.add(existe);
+
+           }
+           ArrayList<Integer> indicesColumnas = new ArrayList<Integer>();
+           //Obtenemos los indices de las columns especificadas en la table
+           for(int i =0;i<columnasEspecificadas.size();i++){
+               int indice = t.getColumnIndex(columnasEspecificadas.get(i).name);
+               indicesColumnas.add(indice);
+           }
+           //Llenamos los values con nulls inicialmente
+           for(int i =0;i<t.columns.size();i++){
+               values.add(null);
+               tipos.add(t.columns.get(i).type);
+           }
+           // Verificamos que el numero de columns y el numero de values sean iguales
+           if(ctx.valueList().val().size()!=columnasEspecificadas.size()){
+                   Debug.add("ERROR: El numero de columns y de values especificados debe ser el mismo");
+                   if(!Frame.activateVerbose){
+                       Frame.jTextArea2.setText("ERROR: El numero de columns y de values especificados debe ser el mismo");
+                   }
+
+                   return "ERROR";
+           }
+           //Asignamos los values ingresado a los indices correctos en el arraylist values
+           int i =0;
+           for(ParseTree n: ctx.valueList().val()){
+               Object valueType1 = visit(n);
+               if(!(valueType1 instanceof Integer) ){
+                   return "ERROR";
+               }
+               Object value=null;
+               int valueType = (int) valueType1;
+               if(valueType==Column.CHAR_TYPE){
+                   String v = n.getText();
+                   v= v.substring(1);
+                   v = v.substring(0,v.length()-1);
+                   value = v;
+               }
+               else if (valueType == Column.INT_TYPE){
+                   value = Integer.parseInt(n.getText());
+               }
+               else if(valueType == Column.FLOAT_TYPE){
+                   value = Float.parseFloat(n.getText());
+               }
+               else if(valueType == Column.DATE_TYPE){
+                   String v = n.getText();
+                   v= v.substring(1);
+                   v = v.substring(0,v.length()-1);
+                   value = LocalDate.parse(v);
+               }
+
+               values.set(indicesColumnas.get(i),value);
+               tipos.set(indicesColumnas.get(i),valueType);
+               i++;
+           }
+       }
+       else{
+           // Si no hay columns especificadas tomamos cada uno de los values y su type
+           for(ParseTree n: ctx.valueList().val()){
+               Object valueType1 = visit(n);
+
+               if(!(valueType1 instanceof Integer) ){
+                   return "ERROR";
+               }
+               Object value=null;
+               int valueType = (int) valueType1;
+               if(valueType==Column.CHAR_TYPE){
+                   String v = n.getText();
+                   v= v.substring(1);
+                   v = v.substring(0,v.length()-1);
+                   value = v;
+               }
+               else if (valueType == Column.INT_TYPE){
+                   value = Integer.parseInt(n.getText());
+               }
+               else if(valueType == Column.FLOAT_TYPE){
+                   value = Float.parseFloat(n.getText());
+               }
+               else if(valueType == Column.DATE_TYPE){
+                   String v = n.getText();
+                   v= v.substring(1);
+                   v = v.substring(0,v.length()-1);
+                   value = LocalDate.parse(v);
+               }
+               values.add(value);
+               tipos.add(valueType);
+
+           }
+       }
+           //Verificamos que el numero de values no sea mayor al numero de columns
+           if(values.size()>t.columns.size()){
+               Debug.add("ERROR: El numero de values ingresados es mayor al numero de columns en la table: "+tableName);
+               if(!Frame.activateVerbose){
+                   Frame.jTextArea2.setText("ERROR: El numero de values ingresados es mayor al numero de columns en la table: "+tableName);
+               }
+               return "ERROR";
+           }
+           Tuple newTuple = new Tuple(new ArrayList<Object>(),t);
+           //Llenamos los values con nulls
+           for(Column c: t.columns){
+               newTuple.values.add(null);
+           }
+
+           // Comprobamos los tipos de los values con las columns
+           for(int i =0;i<values.size();i++){
+               int tipoValor = tipos.get(i);
+               int tipoColumna =t.columns.get(i).type;
+               // Si no son iguales... intentamos hacer conversion de tipos
+               if(tipoValor != tipoColumna){
+                   if(tipoValor == Column.INT_TYPE){
+                       if(tipoColumna== Column.CHAR_TYPE){
+                           //Convertimos el entero a un char
+                           String v = values.get(i).toString();
+                           //Verificamos el tamanio del string
+                           if(v.length()>t.columns.get(i).size){
+                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               if(!Frame.activateVerbose){
+                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               }
+
+                               return "ERRROR";
+                           }
+
+                           values.set(i, v);
+                       }
+                       else if (tipoColumna == Column.FLOAT_TYPE){
+                           float v = Float.valueOf(values.get(i).toString());
+                           values.set(i, v);
+                       }
+                       else{
+                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           }
+                           return "ERRROR";
+                       }
+                   }
+                   else if (tipoValor == Column.FLOAT_TYPE){
+                       if(tipoColumna==Column.INT_TYPE){
+
+                           float v1 = Float.valueOf(values.get(i).toString());
+                           int v = (int)v1;  //Convertimos el float al int trucando decimales
+                           values.set(i, v);
+
+
+                       }
+                       else if (tipoColumna == Column.CHAR_TYPE){
+                           String v = values.get(i).toString();
+                           //Verificamos el tamanio del string
+                           if(v.length()>t.columns.get(i).size){
+                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               if(!Frame.activateVerbose){
+                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               }
+                               return "ERRROR";
+                           }
+
+                           values.set(i, v);
+                       }
+                       else{
+                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           }
+                           return "ERRROR";
+                       }
+
+                   }
+                   else if (tipoValor == Column.DATE_TYPE){
+                       if(tipoColumna == Column.CHAR_TYPE){
+                           String v = values.get(i).toString();
+                           //Verificamos el tamanio del string
+                           if(v.length()>t.columns.get(i).size){
+                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               if(!Frame.activateVerbose){
+                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               }
+
+                               return "ERRROR";
+                           }
+                           values.set(i, v);
+
+
+
+                       }
+                       else{
+                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           }
+                           return "ERRROR";
+                       }
+                   }
+                   else if (tipoValor == Column.CHAR_TYPE){
+                        if(tipoColumna == Column.INT_TYPE){
+                           String v = values.get(i).toString();
+                           try{
+                               int v1 = Integer.parseInt(v);
+
+                               values.set(i, v1);
+                           }
+
+                           catch(Exception e){
+                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           }
+                               return "ERRROR";
+                           }
+
+                        }
+                        else if(tipoColumna == Column.FLOAT_TYPE){
+                           String v = values.get(i).toString();
+                           try{
+                               float v1 = Float.parseFloat(v);
+                               values.set(i, v1);
+                           }
+
+                           catch(Exception e){
+                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           }
+                               return "ERRROR";
+                           }
+                        }
+                        else if (tipoColumna == Column.DATE_TYPE){
+                           try{
+                               LocalDate d = LocalDate.parse(values.get(i).toString());
+                               values.set(i, d);
+                           }
+                           catch(Exception e){
+                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           }
+                               return "ERRROR";
+                           }
+                        }
+                        else{
+                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           }
+                           return "ERRROR";
+                        }
+                   }
+
+               }
+               else{
+                   values.set(i, values.get(i));
+               }
+
+
+           }
+           // Si no hubieron errores agregamos los values a la nueva tuple
+           for(int i =0;i<values.size();i++){
+               newTuple.values.set(i, values.get(i));
+
+           }
+
+
+
+           // Comprobamos las constraints de los values
+           Table tempTabla = new Table();
+           tempTabla.name = t.name;
+           tempTabla.columns.addAll(t.columns);
+           Loader.iterator = new TableIterator(tempTabla,0);
+
+           Debug.add("Verificando restricciones en la insercion...");
+
+           for(Constraint cons: t.constraints){
+               if(cons.type==Constraint.PK){
+                    ArrayList<Integer> indices = new ArrayList<Integer>();
+                    ArrayList<Object> pkeyValues = new ArrayList<Object>();
+                   //Revisamos que las columns de la constraint no sean nulas
+                   for(Column c:cons.colsPkeys){
+                       int iValor = t.getColumnIndex(c.name);
+                       indices.add(iValor);
+                       Object v = newTuple.values.get(iValor);
+                       pkeyValues.add(v);
+                       if(v==null){
+                           Debug.add("ERROR: la column <<"+c.name+">> no puede tener value nulo por la constraint <<"+cons.name+">>");
+                           if(!Frame.activateVerbose){
+                               Frame.jTextArea2.setText("ERROR: la column <<"+c.name+">> no puede tener value nulo por la constraint <<"+cons.name+">>");
+                           }
+
+                            return "ERRROR";
+                       }
+
+                   }
+
+
+                   //Revisamos si ya existe el value en las tuples de la table
+                   boolean yaExiste = t.containsValue(pkeyValues, indices);
+                   if(yaExiste){
+                       Debug.add("ERROR: la restriccion <<"+cons.name+">> esta siendo violada con la insercion. Debe existir value unico por la PK: <<"+cons.name+">>");
+                       if(!Frame.activateVerbose){
+                           Frame.jTextArea2.setText("ERROR: la restriccion <<"+cons.name+">> esta siendo violada con la insercion. Debe existir value unico por la PK: <<"+cons.name+">>");
+                       }
+
+                        return "ERRROR";
+                   }
+
+               }
+               else if (cons.type==Constraint.FK){
+                   //Cargamos la table foranea
+                   Table foreignTable = Table.loadTable(cons.foreignTable);
+                   // Obtenemos los values de las columns con la llave foranea en la tuple a insertar
+                   ArrayList<Object> valoresInsert = new ArrayList<Object>();
+                   for(Column c: cons.localFKs){
+                       int indice = t.getColumnIndex(c.name);
+                       Object value = newTuple.values.get(indice);
+                       valoresInsert.add(value);
+
+                   }
+
+                   //Recorremos cada column referenciada y verificamos que el value de la column exista o sea nulo
+                   int i =0;
+                   ArrayList<Integer> indices = new ArrayList<Integer>();
+                   for(Column c:cons.refKeys){
+                       //Obtenemos el indice de la column de referencia
+                       int indice = foreignTable.getColumnIndex(c.name);
+                       indices.add(indice);
+                       Object valorBusqueda = valoresInsert.get(i);
+                       if(valorBusqueda == null){ //Si es nulo reportamos CONTINUAMOS
+                           continue;}
+                       i++;
+                   }
+                   boolean encontrado = foreignTable.containsValue(valoresInsert, indices);
+                   if(!encontrado){
+                       String s="";
+                        for(Object t2: valoresInsert){
+                            if(t2!=null){
+                                s+=t2.toString()+", ";
+                            }
+                            else{s+="null, ";}
+
+                        }
+                       Debug.add("ERROR: La llave <<"+s+">> no existe en la table de referencia: "+foreignTable.name);
+                       if(!Frame.activateVerbose){
+                           Frame.jTextArea2.setText("ERROR: La llave <<"+s+">> no existe en la table de referencia: "+foreignTable.name);
+                       }
+
+                        return "ERRROR";
+                   }
+               }
+               else if(cons.type==Constraint.CHECK){
+                   //Creamos table temporal con contructor que no guarda archivo serializado
+                   Table temp = new Table();
+                   temp.name="temp";
+                   temp.columns=t.columns;
+
+                   temp.tuples.add(newTuple);
+                   Loader.iterator = new TableIterator(temp,0);
+                   //Obtenemos la expresion de la constraint
+                   Expression e = cons.expr;
+                   try {
+                       //No hacemos ningun for porque solo queremos evaluar la tuple que vamos a insertar
+                       if(!e.isTrue()){
+                           return "ERRROR";
+
+                       }
+                   } catch (Exception ex) {
+                       Debug.add("\n ERROR: El value de la tuple: "+newTuple.toString() +" no cumple con la restriccion ' "+cons.exprText+" ' .");
+                       return "ERROR";
+                   }
+
+
+               }
+
+
+           }
+       //Guardamos la table y la metaData
+       t.tuples.add(newTuple);
+       return true;
+    }
+    
+    //*******************************************************************************************************************************
+	//revisar bien esta parte
+    @Override
+    public Object visitUpdateStmt(UpdateStmtContext ctx) {
+    	if(DBMS.currentDB==null){
+            Debug.add("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            }
+            return "ERROR";
+
+        }
+        String tableName = ctx.table().getText();
+        Table t = Table.loadTable(tableName);
+
+        if(t==null){
+            Debug.add("ERROR: No se encuentra la table: "+tableName);
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("ERROR: No se encuentra la table: "+tableName);
+            }
+            return "ERROR";
+        }
+
+        this.availableCols = new ArrayList<Column>();
+        this.availableCols.addAll(t.columns);
+        ArrayList<Column> columnasEspecificadas= new ArrayList<Column>();
+        ArrayList<Object> values = new ArrayList<Object>();
+        //Obtenemos las columns que se especificaron
+        int i =0;
+            Debug.add("Obteniendo columns especificadas...");
+
+        for(ParseTree n: ctx.columnsUpdate()){
+            String colName = n.getText();
+            Column existe = this.getColumn(colName, t.columns);
+            if(existe == null){
+                Debug.add("ERROR: No se encuentra la Column: <<"+colName+">> en la table: "+tableName);
+                if(!Frame.activateVerbose){
+                    Frame.jTextArea2.setText("ERROR: No se encuentra la Column: <<"+colName+">> en la table: "+tableName);
+                }
+                return "ERROR";
+            }
+             //Verificamos los tipos del value y la column actual
+
+            Object tipoValor1 = visit(ctx.val(i));
+            if(tipoValor1 instanceof String){
+                return "ERROR";
+            }
+            Integer tipoValor2 = (Integer) tipoValor1;
+            if(tipoValor2 == -1){
+                values.add(null);
+            }
+            else{
+                values.add(ctx.val(i).getText());
+            }
+
+            int tipoValor = (Integer) tipoValor1;
+            int tipoColumna= existe.type;
+            Object value = null;
+            if(tipoValor==Column.CHAR_TYPE){
+                String v = ctx.val(i).getText();
+                v= v.substring(1);
+                v = v.substring(0,v.length()-1);
+                value = v;
+            }
+            else if (tipoValor == Column.INT_TYPE){
+                value = Integer.parseInt(ctx.val(i).getText());
+            }
+            else if(tipoValor == Column.FLOAT_TYPE){
+                value = Float.parseFloat(ctx.val(i).getText());
+            }
+            else if(tipoValor == Column.DATE_TYPE){
+                value = LocalDate.parse(ctx.val(i).getText());
+            }
+            values.set(i,value);
+            // Si no son iguales... intentamos hacer conversion de tipos
+
+            Debug.add("Verificando tipos...");
+
+            if(tipoValor != tipoColumna){
+                if(tipoValor == Column.INT_TYPE){
+                    if(tipoColumna== Column.CHAR_TYPE){
+                        //Convertimos el entero a un char
+                        String v = values.get(i).toString();
+                        //Verificamos el tamanio del string
+                        if(v.length()>t.columns.get(i).size){
+                            Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                            }
+
+                            return "ERRROR";
+                        }
+
+                        values.set(i, v);
+                    }
+                    else if (tipoColumna == Column.FLOAT_TYPE){
+                        float v = Float.valueOf(values.get(i).toString());
+                        values.set(i, v);
+                    }
+                    else{
+                        Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                        }
+                        return "ERRROR";
+                    }
+                }
+                else if (tipoValor == Column.FLOAT_TYPE){
+                    if(tipoColumna==Column.INT_TYPE){
+                        float v1 = Float.valueOf(values.get(i).toString());
+                        int v = (int)v1;  //Convertimos el float al int trucando decimales
+                        values.set(i, v);
+
+
+                    }
+                    else if (tipoColumna == Column.CHAR_TYPE){
+                        String v = values.get(i).toString();
+                        //Verificamos el tamanio del string
+                        if(v.length()>t.columns.get(i).size){
+                            Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                            }
+
+                            return "ERRROR";
+                        }
+
+                        values.set(i, v);
+                    }
+                    else{
+                        Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                        }
+                        return "ERRROR";
+                    }
+
+                }
+                else if (tipoValor == Column.DATE_TYPE){
+                    if(tipoColumna == Column.CHAR_TYPE){
+                        String v = values.get(i).toString();
+                        //Verificamos el tamanio del string
+                        if(v.length()>t.columns.get(i).size){
+                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            }
+                            return "ERRROR";
+                        }
+                        values.set(i, v);
+
+
+
+                    }
+                    else{
+                        Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                        }
+                        return "ERRROR";
+                    }
+                }
+                else if (tipoValor == Column.CHAR_TYPE){
+                     if(tipoColumna == Column.INT_TYPE){
+                        String v = values.get(i).toString();
+                        try{
+                            int v1 = Integer.parseInt(v);
+
+                            values.set(i, v1);
+                        }
+
+                        catch(Exception e){
+                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            }
+                            return "ERRROR";
+                        }
+
+                     }
+                     else if(tipoColumna == Column.FLOAT_TYPE){
+                        String v = values.get(i).toString();
+                        try{
+                            float v1 = Float.parseFloat(v);
+                            values.set(i, v1);
+                        }
+
+                        catch(Exception e){
+                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            }
+                            return "ERRROR";
+                        }
+                     }
+                     else if (tipoColumna == Column.DATE_TYPE){
+                        try{
+                            LocalDate d = LocalDate.parse(values.get(i).toString());
+                            values.set(i, d);
+                        }
+                        catch(Exception e){
+                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            }
+                            return "ERRROR";
+                        }
+                     }
+                     else{
+                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            }
+                        return "ERRROR";
+                     }
+                }
+
+            }
+            else{
+                values.set(i, values.get(i));
+            }
+
+            columnasEspecificadas.add(existe);
+            i++;
+
+        }
+        ArrayList<Integer> indicesColumnas = new ArrayList<Integer>();
+        //Obtenemos los indices de las columns especificadas en la table
+        for(int j =0;j<columnasEspecificadas.size();j++){
+            int indice = t.getColumnIndex(columnasEspecificadas.get(j).name);
+            indicesColumnas.add(indice);
+        }
+
+        //Obtenemos la expresion WHERE
+        Object where1 = visit(ctx.expression());
+        if(where1 instanceof String){
+            return "ERROR";
+        }
+        Expression where = (Expression) where1;
+
+        //Creamos el iterator para la table que se creo
+        Loader.iterator = new TableIterator(t,0);
+        //Recorremos cada una de las tuples en el iterator y verificamos la condicion.
+        int numModificadas =0;
+        ArrayList<Tuple> tuplasWhere = new ArrayList<Tuple>();
+        for(int j =0;j<Loader.iterator.table.tuples.size();j++){
+            Tuple tuplaActual = Loader.iterator.table.tuples.get(j);
+            try {
+                if(where.isTrue()!= null && where.isTrue()){
+                   numModificadas++;
+                   t.actualizarTupla(values, indicesColumnas, j);
+                   tuplasWhere.add(tuplaActual);
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(Loader.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            Loader.iterator.siguiente(); //Movemos el iterator a la siguiente tuple
+        }
+
+        Debug.add("Verificando restricciones en la actualizacion...");
+
+        //Verificamos contraints en cada una de las tuples de la table
+        for(Tuple currentTupla: tuplasWhere){
+
+            for(Constraint cons: t.constraints){
+                if(cons.type== Constraint.PK){
+                    ArrayList<Object> checkValues = new ArrayList<Object>();
+                    ArrayList<Integer> indexChecks = new ArrayList<Integer>();
+                    for(Column c: cons.colsPkeys){
+                        int indice = t.getColumnIndex(c.name);
+                        Object val=currentTupla.values.get(indice);
+                        checkValues.add(val);
+                        indexChecks.add(indice);
+                    }
+                    //Revisamo si hay values nulos
+                    boolean contieneNulls = t.hasNullValues(indexChecks,currentTupla);
+                    if(contieneNulls){
+                        Debug.add("ERROR: la actualizacion viola la restriccion <<"+cons.name+">> porque crea values nulos para llave primaria");
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: la actualizacion viola la restriccion <<"+cons.name+">> porque crea values nulos para llave primaria");
+                        }
+                        return "ERROR";
+                    }
+                    boolean duplicada = t.estaDuplicado(checkValues, indexChecks);
+                    if(duplicada){
+                        Debug.add("ERROR: la actualizacion viola la restriccion <<"+cons.name+">> porque crea values duplicates de una llave primaria");
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: la actualizacion viola la restriccion <<"+cons.name+">> porque crea values duplicates de una llave primaria");
+                        }
+                        return "ERROR";
+                    }
+
+                }
+                else if (cons.type == Constraint.FK){
+                    Table foreign = Table.loadTable(cons.foreignTable);
+                    //Obtenemos los values de la tuple actual
+                    ArrayList<Object> checkValues = new ArrayList<Object>();
+                    ArrayList<Integer> localIndexes = new ArrayList<Integer>();
+                    for(Column local: cons.localFKs){
+                        int indice = t.getColumnIndex(local.name);
+                        localIndexes.add(indice);
+                        Object v = currentTupla.values.get(indice);
+                        checkValues.add(v);
+                    }
+                    //Obtenemos los indices de la tuple foranea para buscar los values de la tuple local
+                    ArrayList<Integer> indexValues = new ArrayList<Integer>();
+                    for ( Column foreignCol: cons.refKeys){
+                        int index = foreign.getColumnIndex(foreignCol.name);
+                        indexValues.add(index);
+
+                    }
+
+                    //Revisamos si hay values nulos
+                   /* boolean contieneNulls = t.hasNullValues(localIndexes,currentTupla);
+                    if(contieneNulls){
+                        Frame.jTextArea2.setText("ERROR: la actualizacion viola la restriccion <<"+cons.name+">> porque crea values nulos para llave foranea");
+                        return "ERROR";
+                    }  */
+                    boolean contieneValores = foreign.containsValue(checkValues, indexValues);
+                    if(!contieneValores){
+                        Debug.add("ERROR: la actualizacion viola la restriccion <<"+cons.name+">> porque no se encuentra el value de la llave foranea");
+                        if(!Frame.activateVerbose){
+                            Frame.jTextArea2.setText("ERROR: la actualizacion viola la restriccion <<"+cons.name+">> porque no se encuentra el value de la llave foranea");
+                        }
+                        return "ERROR";
+
+                    }
+                }
+                else if(cons.type == Constraint.CHECK){
+                    Table temp = new Table();
+                    temp.name = t.name;
+                    temp.columns.addAll(t.columns);
+                    temp.tuples.add(currentTupla);
+                    Loader.iterator = new TableIterator(temp,0);
+                    try {
+                        if( !cons.expr.isTrue()){
+                            Debug.add("ERROR: la actualizacion viola la restriccion <<"+cons.name+">>.");
+                            if(!Frame.activateVerbose){
+                                Frame.jTextArea2.setText("ERROR: la actualizacion viola la restriccion <<"+cons.name+">>.");
+                            }
+                            return "ERROR";
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(Loader.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+
+        }
+
+        Debug.add("Verificando integridad referencial de la table...");
+
+        //Obtenemos refs a la table
+        ArrayList<Constraint> refs = getReferences(t.name);
+
+        for(Constraint refCons: refs){
+            //Para cada refs primero cargamos la table local de la referencia
+            Table localTable = Table.loadTable(refCons.table);
+           //Luego, para cada tuple de la table obtenemos las columns locales y sus values con localfkey
+            for(Tuple tuple:localTable.tuples){
+                ArrayList<Integer> searchIndex = new ArrayList<Integer>();
+                ArrayList<Integer> indexT = new ArrayList<Integer>();
+                ArrayList<Object> currentValues = new ArrayList<Object>();
+                for(Column col: refCons.localFKs){
+                    int index = localTable.getColumnIndex(col.name);
+                    searchIndex.add(index);
+                }
+                for(int iv: searchIndex){
+                    currentValues.add(tuple.values.get(iv));
+
+                }
+                for(Column c2: refCons.refKeys){
+                    int index2 = t.getColumnIndex(c2.name);
+                    indexT.add(index2);
+
+                }
+                  // Revisamos si los values de la tuple actual existen en los values de la table de referencia (i.e la mencionada en UPDATE tableName)
+                boolean found = t.containsValue(currentValues, indexT);
+                if(found==false){
+                    Debug.add("ERROR: La restriccion <<"+refCons.name+">> de la table <<"+localTable.name+">>esta siendo violdada con la actualizacion porque se cambio el value de una tuple referenciada.");
+                    if(!Frame.activateVerbose){
+                        Frame.jTextArea2.setText("ERROR: La restriccion <<"+refCons.name+">> de la table <<"+localTable.name+">>esta siendo violdada con la actualizacion porque se cambio el value de una tuple referenciada.");
+                    }
+                    return "ERROR";
+                }
+
+            }
+
+        }
+        //Guardamos la tables
+        t.guardarTabla();
+        Debug.add("Update Finalizado. Se modificaron: "+numModificadas+" registros");
+        if(!Frame.activateVerbose){
+            Frame.jTextArea2.setText("Update Finalizado. Se modificaron: "+numModificadas+" registros");
+        }
+        return true;
+    }
+    
+    //*******************************************************************************************************************************
+  	//revisar bien esta parte
+    @Override
+    public Object visitDeleteStmt(DeleteStmtContext ctx) {
+    	if(DBMS.currentDB==null){
+            Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            return "ERROR";
+
+        }
+        //Para cuando no tiene where
+        String tablename = ctx.table().getText();
+        Table t = Table.loadTable(tablename);
+        Loader.iterator = new TableIterator(t,0);
+        int numDeleted = 0;
+
+
+
+        if(ctx.children.get(2).getChildCount() == 3){
+            for(Loader.iterator.indiceActual = 0; Loader.iterator.indiceActual< Loader.iterator.table.tuples.size(); Loader.iterator.indiceActual++){
+                //Se revisa que no haya referencia a esta column antes de eliminar
+                Loader.iterator.deleteValue();
+                numDeleted++;
+            }
+            boolean isOk = foreignDeleted(t);
+            if(Frame.activateVerbose){
+                Frame.jTextArea2.append("Verificandoo llaves foraneas para eliminacion...");
+            }
+            if(isOk){
+                t.guardarTabla();
+                DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
+                TableMetaData t1 = d.findTable(tablename);
+                t1.cantRegistros = 0;
+                DBMS.metaData.writeMetadata();
+                DBMS.guardar();
+            }
+            else{
+                    Debug.add("\n ERROR: No se puede eliminar la fila debido a que existen refs a una de sus columns");
+                    return "Error";
+            }
+
+        }
+        //para cuando tiene where
+        else if(ctx.children.get(2).getChildCount() == 5){
+            for(Loader.iterator.indiceActual = 0; Loader.iterator.indiceActual< Loader.iterator.table.tuples.size(); Loader.iterator.indiceActual++){
+                //booleana para determinar si se cumple la condicion para cada tuple
+                Object isTrueHere = ctx.expression();
+                //Si es un string es un error
+                if(isTrueHere instanceof String){
+                    return "ERROR";
+                }
+                //Si no es string se castea
+                Expression pass = (Expression)isTrueHere;
+
+                try {
+                    //Se revisa que no haya referencia a esta column antes de eliminar
+                    if(pass.isTrue() != null ||pass.isTrue()){
+                        Loader.iterator.deleteValue();
+                        numDeleted++;
+
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(Loader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            boolean isOk = foreignDeleted(t);
+            if(Frame.activateVerbose){
+                Frame.jTextArea2.append("Verificando llaves foraneas para eliminacion...");
+            }
+
+            if(isOk){
+                t.guardarTabla();
+                DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
+                TableMetaData t1 = d.findTable(tablename);
+                t1.cantRegistros = 0;
+                DBMS.metaData.writeMetadata();
+                DBMS.guardar();
+            }
+            else{
+
+                    Debug.add("\n ERROR: No se puede eliminar la fila debido a que existen refs a una de sus columns");
+                    return "Error";
+            }
+        }
+
+
+        return super. visitDeleteStmt(ctx);
+    }
+
+    //*******************************************************************************************************************************
+  	//revisar bien esta parte
+    @Override
+    public Object visitShowDbStmt(ShowDbStmtContext ctx) {
+    	//1. Especificar el directorio donde se debe ir a buscar el archivo de metadata
+        String currentDir = System.getProperty("user.dir");
+        System.out.println(currentDir);
+        //2. Abrir el archivo de metadata
+        File directorio  = new File(currentDir+"/DBMS/master.dat");
+        BufferedReader reader = null;
+        String [] nombres = null;
+        int indiceDosPuntos = 0;
+        ArrayList<String> nombresDB = new ArrayList<String>();
+
+        //3. Leer el archivo de metadata
+        try{
+            reader = new BufferedReader(new FileReader(directorio));
+            String text = null;
+            while ((text = reader.readLine()) != null) {
+                nombres = text.split(" ");
+                indiceDosPuntos = java.util.Arrays.asList(nombres).indexOf("Datos:");
+                if(indiceDosPuntos>0)
+                {
+                    //4. Pasar cada dato referente al name de las bases de datos creadas
+                    nombresDB.add(nombres[indiceDosPuntos+1]);
+                }
+                indiceDosPuntos = 0;
+
+            }
+        }
+
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        //5. Mostrar el string creado
+        for(int i = 0; i< nombresDB.size(); i++)
+        {
+            System.out.println(nombresDB.get(i));
+        }
+        /*Prueba para mostrar las bases de datos*/
+        ArrayList<String> tituloColumnas = new ArrayList<String>();
+        tituloColumnas.add("Databases: ");
+        ArrayList<ArrayList<String>> filas = new ArrayList<ArrayList<String>>();
+        for(int i = 0; i< nombresDB.size(); i++)
+        {
+            ArrayList<String> tempFila = new ArrayList<String>();
+            tempFila.add(nombresDB.get(i));
+            filas.add(tempFila);
+        }
+        Resultados results = new Resultados(tituloColumnas, filas);
+        for(Component i: Frame.forResults.getComponents()){
+            Frame.forResults.remove(i);
+        }
+        Frame.forResults.add(results);
+        Frame.forResults.revalidate();
+        Frame.forResults.repaint();
+        return super.visitShowDbStmt(ctx);
+    }
+
+    //*******************************************************************************************************************************
+  	//revisar bien esta parte
+    @Override
+    public Object visitDropTableStmt(DropTableStmtContext ctx) {
+    	if(DBMS.currentDB==null){
+            Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            return "ERROR";
+
+        }
+        /*Borrar implica:
+        1. Ver que base de datos estoy usando. HOLA PABLOOOOO
+        2. Buscar la table si existe
+        3. Borrar la table en la metadata
+        4. Borrar en el archivo serealizable - deleteAllFilesWithName*/
+        String dbActual = DBMS.currentDB;
+        String tablename = ctx.ID().getText();
+        //Se revisa si existe una dependecia con esta table antes de ser eliminada
+        ArrayList<Constraint> constreintsHere = getAllForeignConstraints();
+        for(Constraint c: constreintsHere){
+            if(c.foreignTable.equals(tablename)){
+                Frame.jTextArea2.setText("ERROR: Existe una referencia a la table "+tablename);
+                return "ERROR";
+            }
+        }
+        //Verificamos si hay una DB en uso
+        if(DBMS.currentDB==null){
+            Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            return "ERROR";
+        }
+        //se toma la base de datos
+        DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
+        TableMetaData t = d.findTable(tablename);
+        //Se ve que existan el objeto
+        if(t == null){
+            Frame.jTextArea2.setText("ERROR: No existe ninguna table con el name dado.");
+            return "ERROR";
+        }
+        if(Frame.activateVerbose){
+                Frame.jTextArea2.append("Borrando la table "+tablename);
+        }
+        //Se borra la table
+        d.tables.remove(t);
+        d.writeMetadata();
+        DBMS.metaData.writeMetadata();
+        DBMS.guardar();
+        //se elimnan los serealizados
+        String currentDir = System.getProperty("user.dir");
+        File f1  = new File(currentDir+"/DBMS/"+dbActual+"/"+tablename+"_constraints.ser");
+        File f2  = new File(currentDir+"/DBMS/"+dbActual+"/"+tablename+"_cols.ser");
+        File f3  = new File(currentDir+"/DBMS/"+dbActual+"/"+tablename+".ser");
+        if(f1.exists() && f2.exists() && f3.exists())
+        {
+            System.gc();
+            f1.delete();
+            f2.delete();
+            f3.delete();
+        }
+        if(Frame.activateVerbose){
+                Frame.jTextArea2.append("Table '"+tablename+ "' Borrada existosamente.");
+        }
+        else{
+        Frame.jTextArea2.setText("Table '"+tablename+ "' Borrada existosamente.");
+        }
+        return super.visitDropTableStmt(ctx);
+    }
+    
+    @Override
+    public Object visitAndexpr(AndexprContext ctx) {
+    	if(ctx.children.size()==1){
+            return visit(ctx.factor());
+
+        }
+        else{
+            Object l =  visit(ctx.andexpr());
+            Object r=  visit(ctx.factor());
+            if((l instanceof Expression)&&(r instanceof Expression)){
+                Expression l1 = (Expression)l;
+                Expression r1 = (Expression) r;
+                AndExpression e = new AndExpression(l1,r1);
+                return e;
+            }
+            else{
+                return "ERROR";
+            }
+        }
+    }
+
+    //*******************************************************************************************************************************
+  	//revisar bien esta parte
+    @Override
+    public Object visitUseDbStmt(UseDbStmtContext ctx) {
+    	//1. Especificar el directorio donde se debe ir a buscar el archivo de metadata
+        Debug.add("Bucando Directorio de Base de Datos...");
+        String currentDir = System.getProperty("user.dir");
+        System.out.println(currentDir);
+        //2. Abrir el archivo de metadata
+        File directorio  = new File(currentDir+"/DBMS/master.dat");
+        BufferedReader reader = null;
+        String [] nombres = null;
+        int indiceDosPuntos = 0;
+        ArrayList<String> nombresDB = new ArrayList<String>();
+        //3. Leer el archivo de metadata
+        Debug.add("Bucando Archivo de Metadata...");
+        try{
+            reader = new BufferedReader(new FileReader(directorio));
+            String text = null;
+            while ((text = reader.readLine()) != null) {
+                nombres = text.split(" ");
+                indiceDosPuntos = java.util.Arrays.asList(nombres).indexOf("Datos:");
+                if(indiceDosPuntos>0)
+                {
+                    //4. Pasar cada dato referente al name de las bases de datos creadas
+                    nombresDB.add(nombres[indiceDosPuntos+1]);
+                }
+                indiceDosPuntos = 0;
+
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        //5. Mostrar el string creado
+        String dbname = ctx.ID().getText();
+        boolean existsDb = false;
+        for(int i = 0; i< nombresDB.size(); i++)
+        {
+           if(dbname.equalsIgnoreCase(nombresDB.get(i)))
+           {
+               existsDb = true;
+               break;
+           }
+        }
+        if(existsDb)
+        {
+            DBMS.currentDB = dbname;
+            Debug.add("AVISO: Se esta usando la base de datos llamada: "+dbname);
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("AVISO: Se esta usando la base de datos llamada: "+dbname);
+            }
+
+            System.out.println("Si existe la base de datos");
+        }
+        else
+        {
+            Debug.add("ERROR: No existe la base de datos: "+dbname);
+            if(!Frame.activateVerbose){
+                Frame.jTextArea2.setText("ERROR: No existe la base de datos: "+dbname);
+            }
+            return "ERROR";
+        }
+        return super.visitUseDbStmt(ctx);
+    }
+
+    //*******************************************************************************************************************************
+  	//revisar bien esta parte
+    @Override
+    public Object visitCompareExpr(CompareExprContext ctx) {
+    	String op = ctx.rel_op().getText();
+        if(!op.equals("=")&&!op.equals("<>")&&!op.equals(">")&&!op.equals("<")&&!op.equals(">=")&&!op.equals("<=")){
+            Frame.jTextArea2.setText("Error, operando invalido en expresion: "+op);
+            return "ERROR";
+        }
+        else{
+            Object l = visit(ctx.term(0));
+            Object r = visit(ctx.term(1));
+            if((l instanceof Term)&& (r instanceof Term)){
+                Term l1 = (Term) l;
+                Term r1 = (Term)r;
+
+
+
+                //Verificamos los tipos
+                if(l1.type == Term.INT_TYPE && r1.type== Term.CHAR_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'INT' , 'CHAR'");
+                    return "ERROR";
+                }
+                if(l1.type == Term.INT_TYPE && r1.type == Term.DATE_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'INT' , 'Date'");
+                    return "ERROR";
+                }
+                if(l1.type == Term.CHAR_TYPE && r1.type == Term.INT_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'CHAR' , 'INT'");
+                    return "ERROR";
+                }
+                if(l1.type == Term.DATE_TYPE && r1.type == Term.INT_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'Date' , 'INT'");
+                    return "ERROR";
+                }
+                if(l1.type == Term.FLOAT_TYPE && r1.type == Term.CHAR_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'INT' , 'CHAR'");
+                    return "ERROR";
+                }
+                if(l1.type == Term.FLOAT_TYPE && r1.type== Term.DATE_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'INT' , 'Date'");
+                    return "ERROR";
+                }
+                if(l1.type == Term.CHAR_TYPE && r1.type == Term.FLOAT_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'CHAR' , 'INT'");
+                    return "ERROR";
+                }
+                if(l1.type == Term.DATE_TYPE && r1.type == Term.FLOAT_TYPE ){
+                    Frame.jTextArea2.setText("Error, Tipos invalidos en comparacion: 'Date' , 'INT'");
+                    return "ERROR";
+                }
+
+                CompareExpression e = new CompareExpression(l1,r1,op);
+                return e;
+
+            }
+             else{
+                return "ERROR";
+            }
+        }
+
+    }
+
+	//*******************************************************************************************************************************
+	//revisar bien esta parte
+    @Override
+    public Object visitSelectStmt(SelectStmtContext ctx) {
+    	if(DBMS.currentDB==null){
+            Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+            return "ERROR";
+
+        }
+        //Primero revisamos las tables especificadas en el from
+        ArrayList<Table> tablasFrom = new ArrayList<Table>();
+        for(ParseTree n: ctx.table()){
+            String tableName = n.getText();
+            Table t = Table.loadTable(tableName);
+            if(t==null){
+                Frame.jTextArea2.setText("ERROR: No se encuentra la table: "+tableName);
+                return "ERRROR";
+            }
+            else{
+                tablasFrom.add(t);
+            }
+        }
+        //Una vez tenemos todas las tables calculamos el producto cartesiano de ellas
+        Table temp = cartesianProduct(tablasFrom);
+
+        Loader.iterator = new TableIterator(temp,0);
+        //Verificamos que existan las columns del where en la table temporal agregandolas a las columns disponibles
+        this.availableCols = new ArrayList<Column>();
+        this.availableCols.addAll(temp.columns);
+        ArrayList<Tuple> resultSelect = new ArrayList<Tuple>();
+        //Inicialmente agregamos al resultado toda la table, si hay where la vaciamos
+        boolean hayWhere = false;
+        if(ctx.WHERE()!=null){
+            hayWhere = true;
+            Object where1 = visit(ctx.expression());
+            if(where1 instanceof String){
+                return "ERROR";
+            }
+            Expression where = (Expression) where1;
+
+            for(int j =0;j<Loader.iterator.table.tuples.size();j++){
+                Tuple tuplaActual = Loader.iterator.table.tuples.get(j);
+                try {
+                    if(where.isTrue()!=null && where.isTrue()){
+                        resultSelect.add(tuplaActual);
+
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(Loader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                Loader.iterator.siguiente(); //Movemos el iterator a la siguiente tuple
+            }
+        }
+        if(!hayWhere){
+            resultSelect = temp.tuples;
+        }
+        //Verificamos que existan las columns del select en la table temporal
+        ArrayList<Column> colsSelect = new ArrayList<Column>();
+        if(ctx.selectList()!=null){
+            for(ParseTree n: ctx.selectList().ID()){
+                String col = n.getText();
+                Column existe = getColumn(col,temp.columns);
+                colsSelect.add(existe);
+                if(existe == null){
+                    Frame.jTextArea2.setText("ERROR: No se encuentra la column."+col);
+                    return "ERROR";
+                }
+
+            }
+        }
+        else{
+            colsSelect.addAll(temp.columns);
+        }
+        //Obtenemos los indices de las columns del select
+        ArrayList<Integer> indexSelect = new ArrayList<Integer>();
+        for(Column c: colsSelect){
+            int indice = temp.getColumnIndex(c.name);
+            indexSelect.add(indice);
+
+        }
+        //Agregamos al resultado final solo las columns del select
+        ArrayList<Tuple> resultadoFinal = new ArrayList<Tuple>();
+        for(Tuple t : resultSelect){
+            Tuple tfinal = new Tuple(temp);
+            for(int i:indexSelect){
+                Object value = t.values.get(i);
+                tfinal.values.add(value);
+
+
+            }
+            resultadoFinal.add(tfinal);
+
+        }
+        ArrayList<Orders> orderBy = new ArrayList();
+        temp2=new Table();
+            temp2.name = temp.name;
+            temp2.columns.addAll(colsSelect);
+            temp2.tuples =resultadoFinal;
+            //Se revisa si existen ORDER BY y de ser asi se toma cada uno sus datos  - resultadoFinal
+
+        if(ctx.orderExpr()!=null){
+            if(Frame.activateVerbose){
+                Frame.jTextArea2.append("Ordenando las columns...");
+            }
+
+            for(OrderTermContext n: ctx.orderExpr().orderTerm()){
+                String colName = n.colName().getText();
+                Column a = getColumn(colName, temp2.columns);
+                if(a == null){
+                    Frame.jTextArea2.setText("ERROR: No se encuentra la column."+colName);
+                    return "ERROR";
+                }
+                String order = "";
+                if(n.ASC()==null && n.DESC()==null){
+                    order = "ASC";
+                }
+                else if(n.ASC()!=null){
+                    order = "ASC";
+                }
+                else if(n.DESC()!=null){
+                    order = "DESC";
+                }
+                Orders oN = new Orders(colName,order);
+                orderBy.add(oN);
+            }
+            ComparatorColumn com = new ComparatorColumn(temp2, orderBy);
+            com.order();
+        }
+        //Agregamos el resultado al JTable (pendiente)
+        ArrayList<String> columnsName = new ArrayList();
+        ArrayList<ArrayList<String>> dataToFill = new ArrayList();
+        for(Column c: temp2.columns){
+            columnsName.add(c.name);
+        }
+        System.out.print("Size: "+temp2.tuples.size());
+
+        for(Tuple tN : temp2.tuples){
+               ArrayList<String> tempFill = new ArrayList();
+            for(Object ob : tN.values){
+                if(ob == null){
+                    tempFill.add("");
+                }
+                else{
+                    tempFill.add(((String)ob.toString()));
+                }
+
+            }
+            dataToFill.add(tempFill);
+        }
+        Resultados newResult = new Resultados(columnsName,dataToFill);
+        for(Component i: Frame.forResults.getComponents()){
+            Frame.forResults.remove(i);
+        }
+        Frame.forResults.add(newResult);
+        Frame.forResults.revalidate();
+        Frame.forResults.repaint();
+        return true;
+    }
+   
+    //*******************************************************************************************************************************
+  	//revisar bien esta parte
+    @Override
+    public Object visitTerm(TermContext ctx) {
+    	//Si es un int
+        if(ctx.NUM()!=null){
+            int a = Integer.parseInt(ctx.NUM().getText());
+            Term t = new Term(a);
+            return t;
+        }
+        else if(ctx.CHAR_VAL()!=null){
+            String s = ctx.CHAR_VAL().getText();
+            s= s.substring(1);
+            s = s.substring(0,s.length()-1);
+            Term t = new Term(s);
+            return t;
+        }
+        else if(ctx.FLOAT_VAL()!=null){
+            float f = Float.parseFloat(ctx.FLOAT_VAL().getText());
+            Term t = new Term(f);
+            return t;
+        }
+        else if(ctx.DATE_VAL()!=null){
+            String date = ctx.DATE_VAL().getText();
+            date= date.substring(1);
+            date = date.substring(0,date.length()-1);
+            try{
+                LocalDate d = LocalDate.parse(date);
+                Term t = new Term(d);
+                return t;
+            }
+            catch(Exception e){
+                 Frame.jTextArea2.setText("Error: Tipo Invalido de Fecha: "+ctx.DATE_VAL().getText());
+                return "ERROR";
+            }
+        }
+        else if (ctx.NULL()!=null){
+            return new Term();
+        }
+        //Si es column
+        else{
+            String colName = ctx.column().getText();
+            //Buscamos la column
+            Column c = this.getColumn(colName, this.availableCols);
+            if(c==null){
+                Frame.jTextArea2.setText("Error: No se encuentra la column: "+colName);
+                return "ERROR";
+            }
+            Term t = new Term(c);
+            return t;
+        }
+    }
+    
 	@Override
 	public Object visitShowTableStmt(ShowTableStmtContext ctx) {
 		if(DBMS.currentDB==null){
@@ -1040,7 +2770,11 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		// TODO Auto-generated method stub
 		return super.visitChNombre(ctx);
 	}
-	
+	@Override
+    public Object visitQuery(QueryContext ctx) {
+    	// TODO Auto-generated method stub
+    	return super.visitQuery(ctx);
+    }
 	@Override
 	public Object visitOrderExpr(OrderExprContext ctx) {
 		// TODO Auto-generated method stub
