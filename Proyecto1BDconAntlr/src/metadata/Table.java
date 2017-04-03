@@ -12,13 +12,12 @@ public class Table {
 	String nombreDeLaTabla;
 	String nomAtributo;
 
-	
 	//Constructor
 	public Table(String nombre){
 		contadorDeColumnas = 0;
 		nombreDeLaTabla = nombre;
 	}
-	
+
 	//======== funciones ========//
 	public void agregarColumna(String nombreDeColumna, int atributo, int[] givenConstr){
 		if (checkSiColumnaExiste(nombreDeColumna))
@@ -27,22 +26,22 @@ public class Table {
 	}
 
 	private boolean checkSiColumnaExiste(String nombreDeColumna){
-			for (int i = 0; i < columna.size();i++)
-				if (nombreDeColumna.equals(columna.get(i).nombreDeColumna)){
-					System.out.println("Esta columna ya existe");
-					return true;
-				}
+		for (int i = 0; i < columna.size();i++)
+			if (nombreDeColumna.equals(columna.get(i).nombreDeColumna)){
+				System.out.println("Esta columna ya existe");
+				return true;
+			}
 		return false;
 	}
-	
+
 	public String nombreDeTabla(){
 		return nombreDeLaTabla;
 	}
 	public void setNombre(String name){
 		nombreDeLaTabla = name;
 	}
-	
-	
+
+
 	//para escribir despues
 	private String atributoAInt(int atrib){
 		switch (atrib) {
@@ -54,8 +53,33 @@ public class Table {
 			return "char";
 		default:
 			return "fecha";
-			
+
 		}
 	}
+
+	public String[] readTable(){
+		String[] returnArray = new String[columna.size()];
+		for(int i=0;i<columna.size();i++){
+			returnArray[i] = columna.get(i).nombreDeColumna + "," + columna.get(i).readCol();
+		}
+		return returnArray;
+	}
 	
+	//regresa la columna en un string separado por comas, si el string es null no encontro la columna en la tabla.
+	public String readColumna(String columnaDada){
+		String colEnString = null;
+		int colBuscada = buscarColumnaConNombre(columnaDada);
+		if (colBuscada == -1)
+			return colEnString;
+		colEnString = columna.get(colBuscada).nombreDeColumna + "," + columna.get(colBuscada).readCol();
+		return colEnString;
+	}
+	private int buscarColumnaConNombre(String nombreParaBuscar){
+		for(int i = 0; i < columna.size();i++){
+			if (columna.get(i).nombreDeColumna.equalsIgnoreCase(nombreParaBuscar))
+				return i;
+		}
+		return -1;
+	}
+
 }

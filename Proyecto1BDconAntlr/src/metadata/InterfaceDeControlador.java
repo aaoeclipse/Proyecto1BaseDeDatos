@@ -9,11 +9,11 @@ public interface InterfaceDeControlador {
 	public boolean createColumna(String db, String table, String colName, int atributo, int[] constraint); //ya
 	public boolean alterDatabase(String dbViejo, String dbNuevo); //ya
 	public boolean dropDatabase(String db); //ya
-	// ====== TODO ===== //
 	public boolean dropTable(String table, String db); //ya
+	public String [] showTable(String db, String table); //ya
+	public String showColum(String db, String table, String nombreDeCol); //ya
+	// ====== TODO ===== //
 	public boolean showDatabase();
-	public boolean showTable();
-	public boolean showColum();
 	public boolean useDatabase();
 	public boolean select();
 	public boolean update();

@@ -36,4 +36,12 @@ public class Columna {
 		}
 		return false;
 	}
+	
+	//Regresa todo el contenido de la columna solamente separado por una coma
+	public String readCol(){
+		String toReturn = "";
+		for (int i = 0; i < contenido.size();i++)
+			toReturn += contenido.get(i).strCont + ",";
+		return toReturn;
+	}
 }

@@ -114,16 +114,41 @@ public class Controlador implements InterfaceDeControlador{
 		return false;
 	}
 
+	//	Devuelve la tabla por columna en un array. Cada elemento en el array es un string con primero el nombre
+	//	de la columna, seguido por todos sus valores.
+	//	Si devuelve un array vacio es porque no existia la base de datos o la tabla
 	@Override
-	public boolean showTable() {
-		// TODO Auto-generated method stub
-		return false;
+	public String [] showTable(String db, String table) {
+		String [] arrayConTabla = null;
+		if (!readDatabase(db)){
+			System.out.println("Error en showTable: base de datos no encontrada");
+			return arrayConTabla;
+		}
+		if (!DataBase.checkTableName(table)){
+			System.out.println("Error en showTable: tabla no encontrada");
+			return arrayConTabla;
+		}
+		arrayConTabla = DataBase.table.get(DataBase.tablaBuscada).readTable();
+		return arrayConTabla;
 	}
 
 	@Override
-	public boolean showColum() {
-		// TODO Auto-generated method stub
-		return false;
+	public String showColum(String db, String table, String nombreDeCol) {
+		String colParaDevolver = null;
+		if (!readDatabase(db)){
+			System.out.println("Error en showColum: base de datos no encontrada");
+			return colParaDevolver;
+		}
+		if (!DataBase.checkTableName(table)){
+			System.out.println("Error en showColum: tabla no encontrada");
+			return colParaDevolver;
+		}
+		colParaDevolver = DataBase.table.get(DataBase.tablaBuscada).readColumna(nombreDeCol);
+		if (colParaDevolver == null){
+			System.out.println("Error en showColum: columna no encontrada");
+			return colParaDevolver;
+		}
+		return colParaDevolver;
 	}
 
 	@Override

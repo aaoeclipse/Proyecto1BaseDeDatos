@@ -36,8 +36,7 @@ public class Database {
 			table.get(tablaBuscada).agregarColumna(col, atributo, constraint);
 		}
 	}
-
-	private boolean checkTableName(String name){
+	public boolean checkTableName(String name){
 		for(int i = 0; i < table.size();i++){
 			if (table.get(i).nombreDeLaTabla.equalsIgnoreCase(name)){
 				tablaBuscada = i;
@@ -46,6 +45,7 @@ public class Database {
 		}
 		return false;
 	}
+	
 	
 
 }
