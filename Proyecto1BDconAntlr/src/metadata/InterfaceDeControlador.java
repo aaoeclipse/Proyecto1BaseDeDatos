@@ -7,10 +7,10 @@ public interface InterfaceDeControlador {
 	public boolean createDatabase(String db); //ya
 	public boolean createTable(String table, String db); //ya
 	public boolean createColumna(String db, String table, String colName, int atributo, int[] constraint); //ya
-	public boolean alterDatabase(String dbViejo, String dbNuevo); //TODO hacer check si existe la base de datos
-	public boolean dropDatabase(String db); //TODO hacer check si existe la base de datos
+	public boolean alterDatabase(String dbViejo, String dbNuevo); //ya
+	public boolean dropDatabase(String db); //ya
 	// ====== TODO ===== //
-	public boolean dropTable();
+	public boolean dropTable(String table, String db); //ya
 	public boolean showDatabase();
 	public boolean showTable();
 	public boolean showColum();

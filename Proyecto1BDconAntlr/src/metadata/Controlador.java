@@ -74,14 +74,14 @@ public class Controlador implements InterfaceDeControlador{
 		readDatabase(db);
 		DataBase.createColum(table, colName, atributo, constraint);
 		return true;
-
 	}
 
 	@Override
 	public boolean alterDatabase(String dbViejo, String dbNuevo) {
-		if (existeDatabase(dbViejo))
-			return false;
+		
 		dir = new File(workingDir + "/" + archivoMaestro + "/" + dbViejo);
+		if (!dir.exists())
+			return false;
 		dir.renameTo(new File(workingDir + "/" + archivoMaestro + "/" + dbNuevo));
 		return true;
 
@@ -98,8 +98,13 @@ public class Controlador implements InterfaceDeControlador{
 	}
 
 	@Override
-	public boolean dropTable() {
-		// TODO Auto-generated method stub
+	public boolean dropTable(String table, String db) {
+		//checkIfTable
+		dir = new File(workingDir + "/" + archivoMaestro + "/" + db + "/" + table);
+		if (dir.exists()){
+			dir.delete();
+			return true;
+		}
 		return false;
 	}
 
