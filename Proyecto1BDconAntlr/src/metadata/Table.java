@@ -10,7 +10,6 @@ public class Table {
 	int atributos;
 	int contadorDeColumnas;
 	String nombreDeLaTabla;
-	String nomAtributo;
 
 	//Constructor
 	public Table(String nombre){
@@ -56,9 +55,16 @@ public class Table {
 
 		}
 	}
+	//TODO
 	private int atributoAInt(String atrib){
-		return 1;
-		
+		int devolver = -1;
+		if(atrib.equalsIgnoreCase("int"))
+			devolver=0;
+		if(atrib.equalsIgnoreCase("int"))
+			devolver=1;
+		if(atrib.equalsIgnoreCase("int"))
+			devolver=2;
+		return devolver;
 	}
 	public String[] readTable(){
 		String[] returnArray = new String[columna.size()];

@@ -1,4 +1,0 @@
-id_profesor int (PK)
-nombre varchar:255
-id_materia int (FK)
-grado int

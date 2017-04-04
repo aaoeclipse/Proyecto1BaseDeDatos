@@ -1,3 +1,0 @@
-id_material int (PK)
-nombre varchar:255 (FK)
-

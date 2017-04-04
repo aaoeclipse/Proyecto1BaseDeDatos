@@ -11,8 +11,9 @@ public interface InterfaceDeControlador {
 	public String[][] showDatabase(String db); //ya
 	public boolean useDatabase(String db); //ya
 	public boolean insert(String db, String table, String Col, String input); //ya
+	public String select(String db, String table, String Col, String condition); //ya
 	// ====== TODO ===== //
-	public boolean select(String db, String table, String Col); //TODO esta esta rara, creo que hace lo mismo de columna
 	public boolean update();
 	public boolean multiInsert();
+	public boolean orderBy(String db, String table, String col);
 }

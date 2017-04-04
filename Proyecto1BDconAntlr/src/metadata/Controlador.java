@@ -77,7 +77,7 @@ public class Controlador implements InterfaceDeControlador{
 
 	@Override
 	public boolean alterDatabase(String dbViejo, String dbNuevo) {
-		
+
 		dir = new File(workingDir + "/" + archivoMaestro + "/" + dbViejo);
 		if (!dir.exists())
 			return false;
@@ -85,7 +85,7 @@ public class Controlador implements InterfaceDeControlador{
 		return true;
 
 	}
-	
+
 
 	@Override
 	public boolean dropDatabase(String db) {
@@ -163,9 +163,103 @@ public class Controlador implements InterfaceDeControlador{
 	}
 
 	@Override
-	public boolean select(String db, String table, String Col) {
-		// TODO Auto-generated method stub
-		return false;
+	public String select(String db, String table, String Col, String condition) {
+		String selectedString;
+		int atributoDeCol;
+		String colParaDevolver = null;
+		if (!readDatabase(db)){
+			System.out.println("Error en select: db no encontrada");
+			return null;
+		}
+		if (!DataBase.checkTableName(table)){
+			System.out.println("Error en select: tabla no encontrada");
+			return null;
+		}
+		atributoDeCol = DataBase.table.get(DataBase.tablaBuscada).columna.get(DataBase.table.get(DataBase.tablaBuscada).buscarColumnaConNombre(condition)).atributos;
+		if (colParaDevolver == null){
+			System.out.println("Error en select: columna no encontrada");
+			return null;
+		}
+		selectedString = showColum(db, table, Col);
+		if (selectedString == null){
+			System.out.println("Error en Select: No se encuentra la tabla");
+			return null;
+		}
+		if(condition == null){
+			return selectedString;
+		}
+		//prueba que no intente de hacer operaciones con numeros cuando la columna es de string
+		String [] condicionPorPartes = condition.split(",");
+		if ((condicionPorPartes[0].equalsIgnoreCase("<") || 
+				condicionPorPartes[0].equalsIgnoreCase(">") || 
+				condicionPorPartes[0].equalsIgnoreCase("=>") || 
+				condicionPorPartes[0].equalsIgnoreCase("=<")) && atributoDeCol != 1){
+			System.out.println("Error en Select: No se puede utilizar operaciones de integrales con String");
+			return null;
+		}
+
+		//ahora que sabemos que si es correcto vamos a separar el string recibido por showColum
+		String [] columnaSeparada = selectedString.split(",");
+		//Si es un int o un String correcto
+		//Si es un INT
+		if(isNumeric(condicionPorPartes[1])){
+			if (condicionPorPartes[0].equalsIgnoreCase("<")){
+				for(int i = 0; i < columnaSeparada.length; i++){
+					if(Integer.valueOf(columnaSeparada[i]) >= Integer.valueOf(condicionPorPartes[1]))
+						columnaSeparada[i]="";
+				}
+			}
+			if (condicionPorPartes[0].equalsIgnoreCase(">")){
+				for(int i = 0; i < columnaSeparada.length; i++){
+					if(Integer.valueOf(columnaSeparada[i]) <= Integer.valueOf(condicionPorPartes[1]))
+						columnaSeparada[i]="";
+				}
+			}
+			if (condicionPorPartes[0].equalsIgnoreCase("=<")){
+				for(int i = 0; i < columnaSeparada.length; i++){
+					if(Integer.valueOf(columnaSeparada[i]) > Integer.valueOf(condicionPorPartes[1]))
+						columnaSeparada[i]=null;
+				}
+			}
+			if (condicionPorPartes[0].equalsIgnoreCase("=>")){
+				for(int i = 0; i < columnaSeparada.length; i++){
+					if(Integer.valueOf(columnaSeparada[i]) < Integer.valueOf(condicionPorPartes[1]))
+						columnaSeparada[i]=null;
+				}
+			}
+			if (condicionPorPartes[0].equalsIgnoreCase("=")){
+				for(int i = 0; i < columnaSeparada.length; i++){
+					if(Integer.valueOf(columnaSeparada[i]) != Integer.valueOf(condicionPorPartes[1]))
+						columnaSeparada[i]=null;
+				}
+			}
+			selectedString = "";
+			for(int i = 0; i < columnaSeparada.length; i++){
+				selectedString += columnaSeparada[i] + ",";
+			}
+			return selectedString;
+		} //end if condition is int
+
+		//IF STRING
+		if(condicionPorPartes[0].equalsIgnoreCase("=")){
+			for(int i = 0; i < columnaSeparada.length;i++)
+			{
+				if(!columnaSeparada[i].equalsIgnoreCase(condicionPorPartes[1]))
+					columnaSeparada[i] = "";
+			}
+		}
+		if(condicionPorPartes[0].equalsIgnoreCase("<>")){
+			for(int i = 0; i < columnaSeparada.length;i++)
+			{
+				if(columnaSeparada[i].equalsIgnoreCase(condicionPorPartes[1]))
+					columnaSeparada[i] = "";
+			}
+		}
+		selectedString = "";
+		for(int i = 0; i < columnaSeparada.length; i++){
+			selectedString += columnaSeparada[i] + ",";
+		}
+		return selectedString;
 	}
 
 	@Override
@@ -193,7 +287,12 @@ public class Controlador implements InterfaceDeControlador{
 		// TODO Auto-generated method stub
 		return false;
 	}
-
+	
+	@Override
+	public boolean orderBy() {
+		// TODO Auto-generated method stub
+		return false;
+	}  
 
 	//==============Clases Privadas===========/
 
@@ -273,5 +372,10 @@ public class Controlador implements InterfaceDeControlador{
 			leerFile(files[i].getName(), db, i);
 		}
 	}
-	
+	private boolean isNumeric(String s) {  
+		return s.matches("[-+]?\\d*\\.?\\d+");  
+	}
+
+
+
 }
