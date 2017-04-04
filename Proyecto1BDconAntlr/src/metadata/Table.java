@@ -9,12 +9,14 @@ public class Table {
 	//0 String, 1 int, 2 char, 3 fecha
 	int atributos;
 	int contadorDeColumnas;
+	int lineasDeTabla;
 	String nombreDeLaTabla;
 
 	//Constructor
 	public Table(String nombre){
 		contadorDeColumnas = 0;
 		nombreDeLaTabla = nombre;
+		lineasDeTabla=0;
 	}
 
 	//======== funciones ========//
@@ -94,6 +96,8 @@ public class Table {
 		String[] contSplit = cont.split(",");
 		for(int i = 0; i < contSplit.length;i++){
 			columna.get(i % columna.size()).agregaContenido(contSplit[i]);
+			if(i % columna.size() == 0)
+				lineasDeTabla++;
 		}
 	}
 

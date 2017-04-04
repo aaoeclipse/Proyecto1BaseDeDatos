@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class Controlador implements InterfaceDeControlador{
 	//=========== Variables ====================//
@@ -72,6 +73,7 @@ public class Controlador implements InterfaceDeControlador{
 	public boolean createColumna(String db, String table, String colName, int atributo, int[] constraint) {
 		readDatabase(db);
 		DataBase.createColum(table, colName, atributo, constraint);
+		save();
 		return true;
 	}
 
@@ -287,9 +289,9 @@ public class Controlador implements InterfaceDeControlador{
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
+
 	@Override
-	public boolean orderBy() {
+	public boolean orderBy(String db, String table, String col, boolean ascOdes) {
 		// TODO Auto-generated method stub
 		return false;
 	}  
@@ -375,7 +377,34 @@ public class Controlador implements InterfaceDeControlador{
 	private boolean isNumeric(String s) {  
 		return s.matches("[-+]?\\d*\\.?\\d+");  
 	}
+	private void save(){
+		String newDir = workingDir + "/" + archivoMaestro + "/" + DataBase.nombreDeBaseDatos;
+		directory = new File(newDir);
+		directory.mkdirs();
 
+		PrintWriter writer;
 
+		for(int i =0; i<DataBase.table.size();i++){
+			directory = new File(newDir+"/"+DataBase.table.get(i));
+			try{
+				writer = new PrintWriter(directory);
+				//las columnas
+				for(int s = 0; s < DataBase.table.get(i).columna.size(); s++){
+					writer.println(DataBase.table.get(i).columna.get(s).nombreDeColumna+","+DataBase.table.get(i).columna.get(s).atributos);
+				}
+				writer.println("%%");
+				//contenido
+				for(int s = 0; s< DataBase.table.get(i).lineasDeTabla;s++){
+					for(int r = 0; r< DataBase.table.size();r++){
+						writer.println(DataBase.table.get(i).columna.get(r % DataBase.table.get(i).columna.size()).contenido.get(s).strCont);
+					}
+				}
+				writer.close();
+			} catch (IOException e) {
+				System.out.println("Error: En la funcion save");
+			}
 
+		}
+		System.out.println("Se logro save");
+	}
 }
