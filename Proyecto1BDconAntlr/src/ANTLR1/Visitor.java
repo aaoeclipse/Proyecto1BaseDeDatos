@@ -1,12 +1,18 @@
 package ANTLR1;
 
 import java.awt.Frame;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import ANTLR1.DATABASEBaseVisitor;
 import ANTLR1.DATABASEParser.*;
+import metadata.Columna;
+import metadata.Database;
+import metadata.Table;
 
 
 public class Visitor extends DATABASEBaseVisitor<Object> {
@@ -15,12 +21,12 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	
 	
 	DBMS  dbms;
-    ArrayList<Column> colsCreate; // Almacena las columns que se crean en CREATE TABLE para poder verificarlas en los metodos de constraints
+    ArrayList<Columna> colsCreate; // Almacena las columns que se crean en CREATE TABLE para poder verificarlas en los metodos de constraints
     Table tableCreate;
-    Column addedCol; //Column que se acaba de add en add column
+    Columna addedCol; //Column que se acaba de add en add column
     TableMetaData tableCreateMetaData;
     String createTableName;
-    ArrayList<Column> availableCols;
+    ArrayList<Columna> availableCols;
     ArrayList<Constraint> availableCons;
     static TableIterator iterator;
     Table temp2 = null;
@@ -121,8 +127,8 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
     }
 
     // get Column reciving a string and an array of columns.
-    public Column getColumn(String name, ArrayList<Column> cols){
-        for(Column c: cols){
+    public Columna getColumn(String name, ArrayList<Columna> cols){
+        for(Columna c: cols){
             if(c.name.equalsIgnoreCase(name)){
                 return c;
             }
@@ -139,7 +145,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                 ArrayList<Integer> searchIndex = new ArrayList<Integer>();
                 ArrayList<Integer> indexT = new ArrayList<Integer>();
                 ArrayList<Object> currentValues = new ArrayList<Object>();
-                for(Column col: refCons.localFKs){
+                for(Columna col: refCons.localFKs){
                     int index = localTable.getColumnIndex(localTable.name);
                     searchIndex.add(index);
                 }
@@ -147,7 +153,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     currentValues.add(tuple.values.get(iv));
 
                 }
-                for(Column c2: refCons.refKeys){
+                for(Columna c2: refCons.refKeys){
                     int index2 = t.getColumnIndex(c2.name);
                     indexT.add(index2);
 
@@ -276,7 +282,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	//Revisar 	
 	@Override
 	public Object visitCreateTableStmt(CreateTableStmtContext ctx) {
-            this.availableCols = new ArrayList<Column>();
+            this.availableCols = new ArrayList<Columna>();
             this.availableCons = new ArrayList<Constraint>();
             Table t1= new Table(); //Utilizamos el constructor vacio para dejar inicializada la variable
             this.tableCreate = t1;
@@ -306,18 +312,18 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                 }
                 //Guardamos las columns
                 Debug.add("Verificando Columns Declaradas...");
-                ArrayList<Column> cols = new ArrayList<Column>();
+                ArrayList<Columna> cols = new ArrayList<Columna>();
                 for(ParseTree n: ctx.columnDecl()){
-                    Column c = (Column) visit(n);
-                    Column yaExiste = getColumn(c.nombre,cols);
+                	Columna c = (Columna) visit(n);
+                	Columna yaExiste = getColumn(c.nombre,cols);
                     if(yaExiste == null){
                         cols.add(c);
                         availableCols.add(c);
                     }
                     else{
-                        Debug.add("ERROR: La column: <<"+c.nombre+">> Fue especificada mas de una vez");
+                        Debug.add("ERROR: La Columna: <<"+c.nombre+">> Fue especificada mas de una vez");
                         if(!Frame.activateVerbose){
-                            Frame.jTextArea2.setText("ERROR: La column: <<"+c.nombre+">> Fue especificada mas de una vez");
+                            Frame.jTextArea2.setText("ERROR: La Columna: <<"+c.nombre+">> Fue especificada mas de una vez");
                         }
 
 
@@ -387,17 +393,17 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             
             //Revisando que existan los nombres de las columnas
             //Nota: se debe cambiar Column a nuestro metadata para columnas.
-            ArrayList<Column> pkCols = new ArrayList<Column>();
+            ArrayList<Columna> pkCols = new ArrayList<Columna>();
 
             ArrayList<Integer> colIndices = new ArrayList<Integer>();
             for(ParseTree n:ctx.localids()){
                 String text = n.getText();
-                Column found = getColumn(text,colsCreate);
+                Columna found = getColumn(text,colsCreate);
 
                 if(found==null){
-                    Debug.add("Error: No se encuentra la column: "+text+" En la table: "+tableCreate.name);
+                    Debug.add("Error: No se encuentra la Columna: "+text+" En la table: "+tableCreate.name);
                     if(!Frame.activateVerbose){
-                        Frame.jTextArea2.setText("Error: No se encuentra la column: "+text+" En la table: "+tableCreate.name);
+                        Frame.jTextArea2.setText("Error: No se encuentra la Columna: "+text+" En la table: "+tableCreate.name);
                     }
                     return "Error";
                 }
@@ -442,16 +448,16 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         else if(ctx.FOREIGN()!=null){ // Si es foreign key
             String nombre = ctx.fkNombre().getText();
             //Revisando que existan los name de las columns en la table local
-            ArrayList<Column> localCols = new ArrayList<Column>();
+            ArrayList<Columna> localCols = new ArrayList<Columna>();
             ArrayList<Integer> localIndexes = new ArrayList<Integer>();
             for(ParseTree n:ctx.localids()){
                 String text = n.getText();
-                Column found = getColumn(text,colsCreate);
+                Columna found = getColumn(text,colsCreate);
 
                 if(found==null){
-                    Debug.add("Error: No se encuentra la column: "+text+" En la table: "+tableCreate.name);
+                    Debug.add("Error: No se encuentra la Columna: "+text+" En la table: "+tableCreate.name);
                     if(!Frame.activateVerbose){
-                        Frame.jTextArea2.setText("Error: No se encuentra la column: "+text+" En la table: "+tableCreate.name);
+                        Frame.jTextArea2.setText("Error: No se encuentra la Columna: "+text+" En la table: "+tableCreate.name);
                     }
 
                     return "Error";
@@ -482,11 +488,11 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             else{
                 Table tablaRef = Table.loadTable(refTable);
                 ArrayList<Constraint> foreignConstraints = Table.loadConstraints(refTable);
-                ArrayList<Column> fkCols = new ArrayList<Column>();
+                ArrayList<Columna> fkCols = new ArrayList<Columna>();
                 ArrayList<Integer> fkIndexes = new ArrayList<Integer>();
-                ArrayList<Column> cols = Table.loadColums(refTable);
+                ArrayList<Columna> cols = Table.loadColums(refTable);
                 //Buscamos las columns de la primary key de la table foranea
-                ArrayList<Column> columnasPrimary = new ArrayList<Column>();
+                ArrayList<Columna> columnasPrimary = new ArrayList<Columna>();
                 for(Constraint c1: foreignConstraints){
                     if(c1.type == Constraint.PK){
                         columnasPrimary.addAll(c1.colsPkeys);
@@ -506,13 +512,13 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     //Buscamos las columns de la table
 
                     if(cols==null){
-                        Debug.add("Error: No se encuentra archivo de columns para la table: "+refTable);
+                        Debug.add("Error: No se encuentra archivo de Columnas para la table: "+refTable);
                         if(!Frame.activateVerbose){
-                            Frame.jTextArea2.setText("Error: No se encuentra archivo de columns para la table: "+refTable);
+                            Frame.jTextArea2.setText("Error: No se encuentra archivo de Columnas para la table: "+refTable);
                         }
                         return "Error";
                     }
-                    Column found = getColumn(text,cols);
+                    Columna found = getColumn(text,cols);
 
                     if(found==null){
                         Debug.add("Error: No se encuentra la column: "+text+" En la table: "+tableCreate.nombre);
@@ -524,11 +530,11 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     else{
                         //Si encontramos la column, verificamos que la column pertenezca al primary key de la table externa para garantizar que la llave sea unica
 
-                        Column encontrada2 = getColumn(found.nombre,columnasPrimary);
+                    	Columna encontrada2 = getColumn(found.nombre,columnasPrimary);
                         if(encontrada2==null){
-                            Debug.add("Error: No se puede crear la llave foranea. La column de referecia: "+found.nombre+" No es unica ");
+                            Debug.add("Error: No se puede crear la llave foranea. La Columna de referecia: "+found.nombre+" No es unica ");
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: No se puede crear la llave foranea. La column de referecia: "+found.nombre+" No es unica ");
+                                Frame.jTextArea2.setText("ERROR: No se puede crear la llave foranea. La Columna de referecia: "+found.nombre+" No es unica ");
                             }
                             return "Error";
                         }
@@ -542,21 +548,21 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
                 //Una vez obtenidos los dos arreglos de columns verificamos que tengan el mismo tamaño
                 if(fkCols.size()!=localCols.size()){
-                    Debug.add("Error: El numero de columns locales y remotas en la foregin key debe ser el mismo");
+                    Debug.add("Error: El numero de Columnas locales y remotas en la foregin key debe ser el mismo");
                     if(!Frame.activateVerbose){
-                        Frame.jTextArea2.setText("Error: El numero de columns locales y remotas en la foregin key debe ser el mismo");
+                        Frame.jTextArea2.setText("Error: El numero de Columnas locales y remotas en la foregin key debe ser el mismo");
                     }
 
                     return "Error";
                 }
                 //Si los arreglos son iguales verificamos que tengan los mismos type
                 for(int i =0;i<localCols.size();i++){
-                    Column local = localCols.get(i);
-                    Column foreign = fkCols.get(i);
+                	Columna local = localCols.get(i);
+                	Columna foreign = fkCols.get(i);
                     if(local.type!=foreign.type){
-                        Debug.add("Error: las columns: '"+local.nombre+", "+foreign.nombre+"' Deben tener el mismo type");
+                        Debug.add("Error: las Columnas: '"+local.nombre+", "+foreign.nombre+"' Deben tener el mismo type");
                         if(!Frame.activateVerbose){
-                            Frame.jTextArea2.setText("Error: las columns: '"+local.nombre+", "+foreign.nombre+"' Deben tener el mismo type");
+                            Frame.jTextArea2.setText("Error: las Columnas: '"+local.nombre+", "+foreign.nombre+"' Deben tener el mismo type");
                         }
                         return "Error";
 
@@ -615,7 +621,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             //Verificamos que las tuples actuales de la table cumplan con la restriccion
             Table temp = new Table();
             temp.nombre = tableCreate.nombre;
-            temp.columns.addAll(tableCreate.columns);
+            temp.Columna.addAll(tableCreate.Columna);
             temp.tuples.addAll(tableCreate.tuples);
             Loader.iterator = new TableIterator(temp,0);
             for(int i =0; i<Loader.iterator.table.tuples.size();i++){
@@ -654,24 +660,24 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		//Creamos la columan dependiendo del type
         String nombre = ctx.colName().getText();
         int colType = 0;
-        Column c = new Column(null,0,0,tableCreate.nombre);
+        Columna c = new Columna(null,0,0,tableCreate.nombre);
         if(ctx.type().CHAR()!=null){
-            colType = Column.CHAR_TYPE;
+            colType = Columna.CHAR_TYPE;
             int size = Integer.parseInt(ctx.type().NUM().getText());
-            c = new Column(nombre,colType,size,this.tableCreate.nombre);
+            c = new Columna(nombre,colType,size,this.tableCreate.nombre);
         }
         else if(ctx.type().INT()!=null){
-            colType = Column.INT_TYPE;
-            c = new Column(nombre,colType,this.tableCreate.nombre);
+            colType = Columna.INT_TYPE;
+            c = new Columna(nombre,colType,this.tableCreate.nombre);
 
         }
         else if(ctx.type().FLOAT()!=null){
-            colType =Column.FLOAT_TYPE;
-            c = new Column(nombre,colType,this.tableCreate.nombre);
+            colType =Columna.FLOAT_TYPE;
+            c = new Columna(nombre,colType,this.tableCreate.nombre);
         }
         else if(ctx.type().DATE()!=null){
-            colType = Column.DATE_TYPE;
-            c = new Column(nombre,colType,this.tableCreate.nombre);
+            colType = Columna.DATE_TYPE;
+            c = new Columna(nombre,colType,this.tableCreate.nombre);
 
         }
         return c;
@@ -692,16 +698,16 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         ArrayList<ArrayList<String>> filas1 = new ArrayList();
         ArrayList<ArrayList<String>> filas2 = new ArrayList();
         //se carga los titulos para la primera table
-        titulos1.add("Column Nombre");
-        titulos1.add("Column Type");
+        titulos1.add("Columna Nombre");
+        titulos1.add("Columna Type");
         titulos2.add("Constraint Nombre");
         titulos2.add("Constraint Type");
-        titulos2.add("Constraint Description");
+        titulos2.add("Constraint Descripcion");
         //se cargan las filas para las columns que se desean mostrar
-        for (ColumnMetaData column : tm.columns) {
+        for (ColumnMetaData Columna : tm.Columna) {
             ArrayList<String> temp = new ArrayList<String>();
-            temp.add(column.name);
-            temp.add(column.type);
+            temp.add(Columna.name);
+            temp.add(Columna.type);
             filas1.add(temp);
         }
         //Se cargan las filas para los contraints
@@ -835,7 +841,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
             Debug.add("Verificando existencia de nueva columna");
 
-            Column yaExiste = getColumn(colName,this.tableCreate.columns);
+            Columna yaExiste = getColumn(colName,this.tableCreate.columns);
             if(yaExiste!=null){
                 Debug.add("Error: La columna: <<"+colName+">> Fue especificada mas de una vez");
                 if(!Frame.activateVerbose){
@@ -845,17 +851,17 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                 return "Error";
             }
             // Creando la column
-            Column c;
+            Columna c;
 
             Debug.add("Creando la columna...");
 
-            if(tipo1==Column.CHAR_TYPE){
+            if(tipo1==Columna.CHAR_TYPE){
                 int size = Integer.parseInt(ctx.type().NUM().getText());
-                 c = new Column(colName,tipo1,size,tableCreate.name);
+                 c = new Columna(colName,tipo1,size,tableCreate.name);
                  this.addedCol=c;
             }
             else{
-                 c = new Column (colName,tipo1,tableCreate.name);
+                 c = new Columna (colName,tipo1,tableCreate.name);
                  this.addedCol=c;
             }
 
@@ -864,10 +870,10 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             if(ctx.singleColConstraint()!=null){
                 // Asignando las constraints creadas a las disponibles para verificar cosntraints duplicadas
 
-                Debug.add("Agregando restricciones de columna...");
+                Debug.add("Agregando restricciones de Columnaa...");
 
-                this.colsCreate.add(c); //Agregamos la nueva column
-                this.availableCols= this.colsCreate; // Agregamos a columns disponibles para el caso en que haya un CHECK ( expression) con un term como column
+                this.colsCreate.add(c); //Agregamos la nueva Columna
+                this.availableCols= this.colsCreate; // Agregamos a Columna disponibles para el caso en que haya un CHECK ( expression) con un term como column
                 for(ParseTree n: ctx.singleColConstraint()){
                     Object cons = visit(n);
                     if(!(cons instanceof Constraint)){
@@ -889,7 +895,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     if(cs.type==Constraint.CHECK){
                         Table temp = new Table();
                         temp.name = tableCreate.name;
-                        temp.columns.addAll(tableCreate.columns);
+                        temp.Columna.addAll(tableCreate.Columna);
                         temp.tuples.addAll(tableCreate.tuples);
                         Loader.iterator = new TableIterator(temp,0);
                         for(int i =0; i<Loader.iterator.table.tuples.size();i++){
@@ -924,7 +930,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
                 // Agregamos la nueva column a la metaData
                 ColumnMetaData cm= new ColumnMetaData(c.name,c.getStringType(c.type));
-                this.tableCreateMetaData.columns.add(cm);
+                this.tableCreateMetaData.Columna.add(cm);
                 //Agregamos las nuevas constraints a la table
                 this.tableCreate.constraints.addAll(nuevasConstraints);
                 //Agregamos las nuevas constraints a la metaData
@@ -958,11 +964,11 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
             Debug.add("Buscando restriccion para eliminar...");
 
-            Column yaExiste = getColumn(colName,this.tableCreate.columns);
+            Columna yaExiste = getColumn(colName,this.tableCreate.Columna);
             if(yaExiste==null){
-                Debug.add("Error: no se encuentra la columna <<"+colName+">> en la table: "+tableCreate.columns);
+                Debug.add("Error: no se encuentra la columna <<"+colName+">> en la table: "+tableCreate.Columna);
                 if(!Frame.activateVerbose){
-                    Frame.jTextArea2.setText("Error: no se encuentra la columna <<"+colName+">> en la table: "+tableCreate.columns);
+                    Frame.jTextArea2.setText("Error: no se encuentra la columna <<"+colName+">> en la table: "+tableCreate.Columna);
                 }
                 return "Error";
             }
@@ -996,9 +1002,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             String consName = ctx.ID().getText();
             Constraint yaExiste = this.getConstraint(consName, tableCreate.constraints);
             if(yaExiste==null){
-                Debug.add("Error: no se encuentra la constraint <<"+consName+">> en la table: "+tableCreate.columns);
+                Debug.add("Error: no se encuentra la constraint <<"+consName+">> en la table: "+tableCreate.Columna);
                 if(!Frame.activateVerbose){
-                    Frame.jTextArea2.setText("Error: no se encuentra la constraint <<"+consName+">> en la table: "+tableCreate.columns);
+                    Frame.jTextArea2.setText("Error: no se encuentra la constraint <<"+consName+">> en la table: "+tableCreate.Columna);
                 }
 
                 return "Error";
@@ -1008,9 +1014,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
             //Si la constraint es primary key, revisamo refs a otras tables de las columns de la pk
             if(yaExiste.type == Constraint.PK){
-                ArrayList<Column> columns = yaExiste.colsPkeys;
+                ArrayList<Columna> columns = yaExiste.colsPkeys;
                 ArrayList<Constraint> allForeignConstraints = getAllForeignConstraints();
-                for(Column col1: columns){
+                for(Columna col1: columns){
                     Constraint hasReferences = getReferences(col1.name,tableCreate.name,allForeignConstraints);
                     if(hasReferences !=null){
                         Debug.add("Error: No se puede eliminar la constraint PK: <<"+col1.name+">> porque existe la referencia <<"+hasReferences.name+">> en la table: "+hasReferences.table);
@@ -1058,7 +1064,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             //No hacemos ninguna revision si la column existe  pues esta siendo agregada en este momento.
 
             //Creamos constraint
-            ArrayList<Column> pkCols = new ArrayList<Column>();
+            ArrayList<Columna> pkCols = new ArrayList<Columna>();
             pkCols.add(this.addedCol);
             // Verificamos que no existan values agregados, porque sino se agregaran values nulos a la primary key
             if(tableCreate.tuples.size()>0){
@@ -1088,7 +1094,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         else if(ctx.REFERENCES()!=null){
             String name = ctx.fkNombre().getText();
             //Revisando que existan los name de las columns en la table local
-            ArrayList<Column> localCols = new ArrayList<Column>();
+            ArrayList<Columna> localCols = new ArrayList<Columna>();
             localCols.add(addedCol);
             //Obteniendo la table que referencia
             String refTable = ctx.idTabla().getText();
@@ -1108,10 +1114,10 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             else{
                 // Si encontramos la table Cargamos las constraint foraneas
                 ArrayList<Constraint> foreignConstraints = Table.loadConstraints(refTable);
-                ArrayList<Column> fkCols = new ArrayList<Column>();
-                ArrayList<Column> cols = Table.loadColums(refTable);
+                ArrayList<Columna> fkCols = new ArrayList<Columna>();
+                ArrayList<Columna> cols = Table.loadColums(refTable);
                 //Buscamos las columns de la primary key de la table foranea
-                ArrayList<Column> columnasPrimary = new ArrayList<Column>();
+                ArrayList<Columna> columnasPrimary = new ArrayList<Columna>();
                 for(Constraint c1: foreignConstraints){
                     if(c1.type == Constraint.PK){
                         columnasPrimary.addAll(c1.colsPkeys);
@@ -1134,7 +1140,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     }
                     return "ERROR";
                 }
-                Column found = getColumn(text,cols);
+                Columna found = getColumn(text,cols);
                 if(found==null){
                     Debug.add("ERROR: No se encuentra la column: "+text+" En la table: "+refTable);
                     if(!Frame.activateVerbose){
@@ -1148,7 +1154,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     Debug.add("Verificando que las columns pertenezcan a PK...");
 
                     //Si encontramos la column, verificamos que la column pertenezca al primary key de la table externa para garantizar que la llave sea unica
-                    Column encontrada2 = getColumn(found.name,columnasPrimary);
+                    Columna encontrada2 = getColumn(found.name,columnasPrimary);
                     if(encontrada2==null){
                         Debug.add("ERROR: No se puede crear la llave foranea. La column de referecia: "+found.name+" No es unica ");
                         if(!Frame.activateVerbose){
@@ -1173,8 +1179,8 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                 }
                 //Si los arreglos son iguales verificamos que tengan los mismos type
                 for(int i =0;i<localCols.size();i++){
-                    Column local = localCols.get(i);
-                    Column foreign = fkCols.get(i);
+                	Columna local = localCols.get(i);
+                	Columna foreign = fkCols.get(i);
                     if(local.type!=foreign.type){
                         Debug.add("ERROR: las columns: '"+local.name+", "+foreign.name+"' Deben tener el mismo type");
                         if(!Frame.activateVerbose){
@@ -1388,16 +1394,16 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
        }
         //Verificamos si hay columns especificadas
        if(ctx.columnList()!=null){
-           ArrayList<Column> columnasEspecificadas= new ArrayList<Column>();
+           ArrayList<Columna> columnasEspecificadas= new ArrayList<Columna>();
            //Obtenemos las columns que se especificaron
            for(ParseTree n: ctx.columnList().colName()){
                String colName = n.getText();
-               Column existe = this.getColumn(colName, t.columns);
+               Columna existe = this.getColumn(colName, t.columns);
                if(existe == null){
 
-                   Debug.add("ERROR: No se encuentra la Column: <<"+colName+">> en la table: "+tableName);
+                   Debug.add("ERROR: No se encuentra la Columna: <<"+colName+">> en la table: "+tableName);
                    if(!Frame.activateVerbose){
-                       Frame.jTextArea2.setText("ERROR: No se encuentra la Column: <<"+colName+">> en la table: "+tableName);
+                       Frame.jTextArea2.setText("ERROR: No se encuentra la Columna: <<"+colName+">> en la table: "+tableName);
                    }
 
                    return "ERROR";
@@ -1434,19 +1440,19 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                }
                Object value=null;
                int valueType = (int) valueType1;
-               if(valueType==Column.CHAR_TYPE){
+               if(valueType==Columna.CHAR_TYPE){
                    String v = n.getText();
                    v= v.substring(1);
                    v = v.substring(0,v.length()-1);
                    value = v;
                }
-               else if (valueType == Column.INT_TYPE){
+               else if (valueType == Columna.INT_TYPE){
                    value = Integer.parseInt(n.getText());
                }
-               else if(valueType == Column.FLOAT_TYPE){
+               else if(valueType == Columna.FLOAT_TYPE){
                    value = Float.parseFloat(n.getText());
                }
-               else if(valueType == Column.DATE_TYPE){
+               else if(valueType == Columna.DATE_TYPE){
                    String v = n.getText();
                    v= v.substring(1);
                    v = v.substring(0,v.length()-1);
@@ -1468,19 +1474,19 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                }
                Object value=null;
                int valueType = (int) valueType1;
-               if(valueType==Column.CHAR_TYPE){
+               if(valueType==Columna.CHAR_TYPE){
                    String v = n.getText();
                    v= v.substring(1);
                    v = v.substring(0,v.length()-1);
                    value = v;
                }
-               else if (valueType == Column.INT_TYPE){
+               else if (valueType == Columna.INT_TYPE){
                    value = Integer.parseInt(n.getText());
                }
-               else if(valueType == Column.FLOAT_TYPE){
+               else if(valueType == Columna.FLOAT_TYPE){
                    value = Float.parseFloat(n.getText());
                }
-               else if(valueType == Column.DATE_TYPE){
+               else if(valueType == Columna.DATE_TYPE){
                    String v = n.getText();
                    v= v.substring(1);
                    v = v.substring(0,v.length()-1);
@@ -1492,16 +1498,16 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
            }
        }
            //Verificamos que el numero de values no sea mayor al numero de columns
-           if(values.size()>t.columns.size()){
-               Debug.add("ERROR: El numero de values ingresados es mayor al numero de columns en la table: "+tableName);
+           if(values.size()>t.Columna.size()){
+               Debug.add("ERROR: El numero de values ingresados es mayor al numero de Columnas en la table: "+tableName);
                if(!Frame.activateVerbose){
-                   Frame.jTextArea2.setText("ERROR: El numero de values ingresados es mayor al numero de columns en la table: "+tableName);
+                   Frame.jTextArea2.setText("ERROR: El numero de values ingresados es mayor al numero de Columnas en la table: "+tableName);
                }
                return "ERROR";
            }
            Tuple newTuple = new Tuple(new ArrayList<Object>(),t);
            //Llenamos los values con nulls
-           for(Column c: t.columns){
+           for(Columna c: t.columns){
                newTuple.values.add(null);
            }
 
@@ -1511,15 +1517,15 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                int tipoColumna =t.columns.get(i).type;
                // Si no son iguales... intentamos hacer conversion de tipos
                if(tipoValor != tipoColumna){
-                   if(tipoValor == Column.INT_TYPE){
+                   if(tipoValor == Columna.INT_TYPE){
                        if(tipoColumna== Column.CHAR_TYPE){
                            //Convertimos el entero a un char
                            String v = values.get(i).toString();
                            //Verificamos el tamanio del string
                            if(v.length()>t.columns.get(i).size){
-                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                if(!Frame.activateVerbose){
-                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                }
 
                                return "ERRROR";
@@ -1527,20 +1533,20 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
                            values.set(i, v);
                        }
-                       else if (tipoColumna == Column.FLOAT_TYPE){
+                       else if (tipoColumna == Columna.FLOAT_TYPE){
                            float v = Float.valueOf(values.get(i).toString());
                            values.set(i, v);
                        }
                        else{
-                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           Debug.add("ERROR: Tipos invalidos en insercion de columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            }
                            return "ERRROR";
                        }
                    }
-                   else if (tipoValor == Column.FLOAT_TYPE){
-                       if(tipoColumna==Column.INT_TYPE){
+                   else if (tipoValor == Columna.FLOAT_TYPE){
+                       if(tipoColumna==Columna.INT_TYPE){
 
                            float v1 = Float.valueOf(values.get(i).toString());
                            int v = (int)v1;  //Convertimos el float al int trucando decimales
@@ -1548,13 +1554,13 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
 
                        }
-                       else if (tipoColumna == Column.CHAR_TYPE){
+                       else if (tipoColumna == Columna.CHAR_TYPE){
                            String v = values.get(i).toString();
                            //Verificamos el tamanio del string
                            if(v.length()>t.columns.get(i).size){
-                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                if(!Frame.activateVerbose){
-                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                }
                                return "ERRROR";
                            }
@@ -1562,22 +1568,22 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                            values.set(i, v);
                        }
                        else{
-                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            }
                            return "ERRROR";
                        }
 
                    }
-                   else if (tipoValor == Column.DATE_TYPE){
-                       if(tipoColumna == Column.CHAR_TYPE){
+                   else if (tipoValor == Columna.DATE_TYPE){
+                       if(tipoColumna == Columna.CHAR_TYPE){
                            String v = values.get(i).toString();
                            //Verificamos el tamanio del string
                            if(v.length()>t.columns.get(i).size){
-                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                if(!Frame.activateVerbose){
-                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                }
 
                                return "ERRROR";
@@ -1588,15 +1594,15 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
                        }
                        else{
-                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            }
                            return "ERRROR";
                        }
                    }
-                   else if (tipoValor == Column.CHAR_TYPE){
-                        if(tipoColumna == Column.INT_TYPE){
+                   else if (tipoValor == Columna.CHAR_TYPE){
+                        if(tipoColumna == Columna.INT_TYPE){
                            String v = values.get(i).toString();
                            try{
                                int v1 = Integer.parseInt(v);
@@ -1605,15 +1611,15 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                            }
 
                            catch(Exception e){
-                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           Debug.add("ERROR: Tipos invalidos en insercion de columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            }
                                return "ERRROR";
                            }
 
                         }
-                        else if(tipoColumna == Column.FLOAT_TYPE){
+                        else if(tipoColumna == Columna.FLOAT_TYPE){
                            String v = values.get(i).toString();
                            try{
                                float v1 = Float.parseFloat(v);
@@ -1621,30 +1627,30 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                            }
 
                            catch(Exception e){
-                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            }
                                return "ERRROR";
                            }
                         }
-                        else if (tipoColumna == Column.DATE_TYPE){
+                        else if (tipoColumna == Columna.DATE_TYPE){
                            try{
                                LocalDate d = LocalDate.parse(values.get(i).toString());
                                values.set(i, d);
                            }
                            catch(Exception e){
-                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            }
                                return "ERRROR";
                            }
                         }
                         else{
-                           Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                           Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                               Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                            }
                            return "ERRROR";
                         }
@@ -1678,15 +1684,15 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     ArrayList<Integer> indices = new ArrayList<Integer>();
                     ArrayList<Object> pkeyValues = new ArrayList<Object>();
                    //Revisamos que las columns de la constraint no sean nulas
-                   for(Column c:cons.colsPkeys){
+                   for(Columna c:cons.colsPkeys){
                        int iValor = t.getColumnIndex(c.name);
                        indices.add(iValor);
                        Object v = newTuple.values.get(iValor);
                        pkeyValues.add(v);
                        if(v==null){
-                           Debug.add("ERROR: la column <<"+c.name+">> no puede tener value nulo por la constraint <<"+cons.name+">>");
+                           Debug.add("ERROR: la Columna <<"+c.name+">> no puede tener value nulo por la constraint <<"+cons.name+">>");
                            if(!Frame.activateVerbose){
-                               Frame.jTextArea2.setText("ERROR: la column <<"+c.name+">> no puede tener value nulo por la constraint <<"+cons.name+">>");
+                               Frame.jTextArea2.setText("ERROR: la Columna <<"+c.name+">> no puede tener value nulo por la constraint <<"+cons.name+">>");
                            }
 
                             return "ERRROR";
@@ -1712,17 +1718,17 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                    Table foreignTable = Table.loadTable(cons.foreignTable);
                    // Obtenemos los values de las columns con la llave foranea en la tuple a insertar
                    ArrayList<Object> valoresInsert = new ArrayList<Object>();
-                   for(Column c: cons.localFKs){
+                   for(Columna c: cons.localFKs){
                        int indice = t.getColumnIndex(c.name);
                        Object value = newTuple.values.get(indice);
                        valoresInsert.add(value);
 
                    }
 
-                   //Recorremos cada column referenciada y verificamos que el value de la column exista o sea nulo
+                   //Recorremos cada Columna referenciada y verificamos que el value de la column exista o sea nulo
                    int i =0;
                    ArrayList<Integer> indices = new ArrayList<Integer>();
-                   for(Column c:cons.refKeys){
+                   for(Columna c:cons.refKeys){
                        //Obtenemos el indice de la column de referencia
                        int indice = foreignTable.getColumnIndex(c.name);
                        indices.add(indice);
@@ -1803,9 +1809,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             return "ERROR";
         }
 
-        this.availableCols = new ArrayList<Column>();
+        this.availableCols = new ArrayList<Columna>();
         this.availableCols.addAll(t.columns);
-        ArrayList<Column> columnasEspecificadas= new ArrayList<Column>();
+        ArrayList<Columna> columnasEspecificadas= new ArrayList<Columna>();
         ArrayList<Object> values = new ArrayList<Object>();
         //Obtenemos las columns que se especificaron
         int i =0;
@@ -1813,7 +1819,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
         for(ParseTree n: ctx.columnsUpdate()){
             String colName = n.getText();
-            Column existe = this.getColumn(colName, t.columns);
+            Columna existe = this.getColumn(colName, t.columns);
             if(existe == null){
                 Debug.add("ERROR: No se encuentra la Column: <<"+colName+">> en la table: "+tableName);
                 if(!Frame.activateVerbose){
@@ -1838,19 +1844,19 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             int tipoValor = (Integer) tipoValor1;
             int tipoColumna= existe.type;
             Object value = null;
-            if(tipoValor==Column.CHAR_TYPE){
+            if(tipoValor==Columna.CHAR_TYPE){
                 String v = ctx.val(i).getText();
                 v= v.substring(1);
                 v = v.substring(0,v.length()-1);
                 value = v;
             }
-            else if (tipoValor == Column.INT_TYPE){
+            else if (tipoValor == Columna.INT_TYPE){
                 value = Integer.parseInt(ctx.val(i).getText());
             }
-            else if(tipoValor == Column.FLOAT_TYPE){
+            else if(tipoValor == Columna.FLOAT_TYPE){
                 value = Float.parseFloat(ctx.val(i).getText());
             }
-            else if(tipoValor == Column.DATE_TYPE){
+            else if(tipoValor == Columna.DATE_TYPE){
                 value = LocalDate.parse(ctx.val(i).getText());
             }
             values.set(i,value);
@@ -1859,8 +1865,8 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             Debug.add("Verificando tipos...");
 
             if(tipoValor != tipoColumna){
-                if(tipoValor == Column.INT_TYPE){
-                    if(tipoColumna== Column.CHAR_TYPE){
+                if(tipoValor == Columna.INT_TYPE){
+                    if(tipoColumna== Columna.CHAR_TYPE){
                         //Convertimos el entero a un char
                         String v = values.get(i).toString();
                         //Verificamos el tamanio del string
@@ -1875,33 +1881,33 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
                         values.set(i, v);
                     }
-                    else if (tipoColumna == Column.FLOAT_TYPE){
+                    else if (tipoColumna == Columna.FLOAT_TYPE){
                         float v = Float.valueOf(values.get(i).toString());
                         values.set(i, v);
                     }
                     else{
                         Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                         if(!Frame.activateVerbose){
-                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                         }
                         return "ERRROR";
                     }
                 }
-                else if (tipoValor == Column.FLOAT_TYPE){
-                    if(tipoColumna==Column.INT_TYPE){
+                else if (tipoValor == Columna.FLOAT_TYPE){
+                    if(tipoColumna==Columna.INT_TYPE){
                         float v1 = Float.valueOf(values.get(i).toString());
                         int v = (int)v1;  //Convertimos el float al int trucando decimales
                         values.set(i, v);
 
 
                     }
-                    else if (tipoColumna == Column.CHAR_TYPE){
+                    else if (tipoColumna == Columna.CHAR_TYPE){
                         String v = values.get(i).toString();
                         //Verificamos el tamanio del string
                         if(v.length()>t.columns.get(i).size){
                             Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                             }
 
                             return "ERRROR";
@@ -1910,22 +1916,22 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                         values.set(i, v);
                     }
                     else{
-                        Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                        Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                         if(!Frame.activateVerbose){
-                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                         }
                         return "ERRROR";
                     }
 
                 }
-                else if (tipoValor == Column.DATE_TYPE){
-                    if(tipoColumna == Column.CHAR_TYPE){
+                else if (tipoValor == Columna.DATE_TYPE){
+                    if(tipoColumna == Columna.CHAR_TYPE){
                         String v = values.get(i).toString();
                         //Verificamos el tamanio del string
                         if(v.length()>t.columns.get(i).size){
-                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             }
                             return "ERRROR";
                         }
@@ -1937,13 +1943,13 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     else{
                         Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                         if(!Frame.activateVerbose){
-                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                         }
                         return "ERRROR";
                     }
                 }
-                else if (tipoValor == Column.CHAR_TYPE){
-                     if(tipoColumna == Column.INT_TYPE){
+                else if (tipoValor == Columna.CHAR_TYPE){
+                     if(tipoColumna == Columna.INT_TYPE){
                         String v = values.get(i).toString();
                         try{
                             int v1 = Integer.parseInt(v);
@@ -1952,15 +1958,15 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                         }
 
                         catch(Exception e){
-                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             }
                             return "ERRROR";
                         }
 
                      }
-                     else if(tipoColumna == Column.FLOAT_TYPE){
+                     else if(tipoColumna == Columna.FLOAT_TYPE){
                         String v = values.get(i).toString();
                         try{
                             float v1 = Float.parseFloat(v);
@@ -1970,28 +1976,28 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                         catch(Exception e){
                             Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             }
                             return "ERRROR";
                         }
                      }
-                     else if (tipoColumna == Column.DATE_TYPE){
+                     else if (tipoColumna == Columna.DATE_TYPE){
                         try{
                             LocalDate d = LocalDate.parse(values.get(i).toString());
                             values.set(i, d);
                         }
                         catch(Exception e){
-                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             }
                             return "ERRROR";
                         }
                      }
                      else{
-                            Debug.add("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                            Debug.add("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de column: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
+                                Frame.jTextArea2.setText("ERROR: Tipos invalidos en insercion de Columna: <<"+t.columns.get(i).name+">>. Se encontro: "+t.columns.get(i).getStringType(tipoValor)+", "+t.columns.get(i).getStringType(tipoColumna));
                             }
                         return "ERRROR";
                      }
@@ -2048,7 +2054,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                 if(cons.type== Constraint.PK){
                     ArrayList<Object> checkValues = new ArrayList<Object>();
                     ArrayList<Integer> indexChecks = new ArrayList<Integer>();
-                    for(Column c: cons.colsPkeys){
+                    for(Columna c: cons.colsPkeys){
                         int indice = t.getColumnIndex(c.name);
                         Object val=currentTupla.values.get(indice);
                         checkValues.add(val);
@@ -2078,7 +2084,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     //Obtenemos los values de la tuple actual
                     ArrayList<Object> checkValues = new ArrayList<Object>();
                     ArrayList<Integer> localIndexes = new ArrayList<Integer>();
-                    for(Column local: cons.localFKs){
+                    for(Columna local: cons.localFKs){
                         int indice = t.getColumnIndex(local.name);
                         localIndexes.add(indice);
                         Object v = currentTupla.values.get(indice);
@@ -2086,7 +2092,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     }
                     //Obtenemos los indices de la tuple foranea para buscar los values de la tuple local
                     ArrayList<Integer> indexValues = new ArrayList<Integer>();
-                    for ( Column foreignCol: cons.refKeys){
+                    for ( Columna foreignCol: cons.refKeys){
                         int index = foreign.getColumnIndex(foreignCol.name);
                         indexValues.add(index);
 
@@ -2143,7 +2149,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                 ArrayList<Integer> searchIndex = new ArrayList<Integer>();
                 ArrayList<Integer> indexT = new ArrayList<Integer>();
                 ArrayList<Object> currentValues = new ArrayList<Object>();
-                for(Column col: refCons.localFKs){
+                for(Columna col: refCons.localFKs){
                     int index = localTable.getColumnIndex(col.name);
                     searchIndex.add(index);
                 }
@@ -2151,7 +2157,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     currentValues.add(tuple.values.get(iv));
 
                 }
-                for(Column c2: refCons.refKeys){
+                for(Columna c2: refCons.refKeys){
                     int index2 = t.getColumnIndex(c2.name);
                     indexT.add(index2);
 
@@ -2570,7 +2576,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
         Loader.iterator = new TableIterator(temp,0);
         //Verificamos que existan las columns del where en la table temporal agregandolas a las columns disponibles
-        this.availableCols = new ArrayList<Column>();
+        this.availableCols = new ArrayList<Columna>();
         this.availableCols.addAll(temp.columns);
         ArrayList<Tuple> resultSelect = new ArrayList<Tuple>();
         //Inicialmente agregamos al resultado toda la table, si hay where la vaciamos
@@ -2600,14 +2606,14 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             resultSelect = temp.tuples;
         }
         //Verificamos que existan las columns del select en la table temporal
-        ArrayList<Column> colsSelect = new ArrayList<Column>();
+        ArrayList<Columna> colsSelect = new ArrayList<Columna>();
         if(ctx.selectList()!=null){
             for(ParseTree n: ctx.selectList().ID()){
                 String col = n.getText();
-                Column existe = getColumn(col,temp.columns);
+                Columna existe = getColumn(col,temp.columns);
                 colsSelect.add(existe);
                 if(existe == null){
-                    Frame.jTextArea2.setText("ERROR: No se encuentra la column."+col);
+                    Frame.jTextArea2.setText("ERROR: No se encuentra la Columna."+col);
                     return "ERROR";
                 }
 
@@ -2618,7 +2624,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         }
         //Obtenemos los indices de las columns del select
         ArrayList<Integer> indexSelect = new ArrayList<Integer>();
-        for(Column c: colsSelect){
+        for(Columna c: colsSelect){
             int indice = temp.getColumnIndex(c.name);
             indexSelect.add(indice);
 
@@ -2650,7 +2656,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
             for(OrderTermContext n: ctx.orderExpr().orderTerm()){
                 String colName = n.colName().getText();
-                Column a = getColumn(colName, temp2.columns);
+                Columna a = getColumn(colName, temp2.columns);
                 if(a == null){
                     Frame.jTextArea2.setText("ERROR: No se encuentra la column."+colName);
                     return "ERROR";
@@ -2674,7 +2680,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         //Agregamos el resultado al JTable (pendiente)
         ArrayList<String> columnsName = new ArrayList();
         ArrayList<ArrayList<String>> dataToFill = new ArrayList();
-        for(Column c: temp2.columns){
+        for(Columna c: temp2.columns){
             columnsName.add(c.name);
         }
         System.out.print("Size: "+temp2.tuples.size());
@@ -2743,9 +2749,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         }
         //Si es column
         else{
-            String colName = ctx.column().getText();
+            String colName = ctx.column()().getText();
             //Buscamos la column
-            Column c = this.getColumn(colName, this.availableCols);
+            Columna c = this.getColumn(colName, this.availableCols);
             if(c==null){
                 Frame.jTextArea2.setText("Error: No se encuentra la column: "+colName);
                 return "ERROR";
@@ -2792,19 +2798,19 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 		//Se debe agregar Column de la metadata para ver el tipo de valor se debe 
 		//reconocer que aqui pide la class columna.java, la cual debemos ingresar enuestra metadata
 		if(ctx.CHAR_VAL()!=null){
-            return Column.CHAR_TYPE;
+            return Columna.CHAR_TYPE;
 
         }
         else if(ctx.NUM()!= null){
-            return Column.INT_TYPE;
+            return Columna.INT_TYPE;
 
         }
         else if (ctx.DATE_VAL()!=null){
-            return Column.DATE_TYPE;
+            return Columna.DATE_TYPE;
 
         }
         else if (ctx.FLOAT_VAL()!=null){
-            return Column.FLOAT_TYPE;
+            return Columna.FLOAT_TYPE;
         }
         else if(ctx.NULL()!=null){
             return -1;
@@ -2815,17 +2821,17 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	@Override
 	public Object visitTipo(TipoContext ctx) {
 				if(ctx.CHAR()!= null){
-		                    return Column.CHAR_TYPE;
+		                    return Columna.CHAR_TYPE;
 		                }
 		                else if (ctx.DATE()!= null){
-		                    return Column.DATE_TYPE;
+		                    return Columna.DATE_TYPE;
 		                }
 		                else if (ctx.INT()!= null){
-		                    return Column.INT_TYPE;
+		                    return Columna.INT_TYPE;
 
 		                }
 		                else if (ctx.FLOAT()!= null){
-		                    return Column.FLOAT_TYPE;
+		                    return Columna.FLOAT_TYPE;
 		                }
 		                else{
 		                    return "Error";
