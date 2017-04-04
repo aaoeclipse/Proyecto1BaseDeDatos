@@ -74,7 +74,7 @@ public class DBMS{
       }
 
       catch(IOException e){
-          Logger.getLogger(DBMS.class.getName()).log(level.SEVERE, null, e);
+          Logger.getLogger(DBMS.class.getName()).log(Level.SEVERE, null, e);
       }
 
     }
@@ -91,7 +91,7 @@ public class DBMS{
     }
 
     catch(IOException e){
-      Logger.getLogger(DBMS.class.getName()).log(level.SEVERE, null, e);
+      Logger.getLogger(DBMS.class.getName()).log(Level.SEVERE, null, e);
     }
   }
 

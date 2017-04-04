@@ -84,18 +84,17 @@ public class DB{
   public boolean dropDB(String nombre){
     String currentDir = System.getProperty("user.dir");
     File directory  = new File(currentDir+"/DBMS/"+name);
-    boolean exists = directorio.exists();
+    boolean exists = directory.exists();
     if(exists){
       Debug.add("Searching database...");
       DBMetaData db = DBMS.metaData.getDB(nombre);
 
       //if it not empty
       if (db != null){
-        //get # records
-        int records = countRecords(nombre);
+        //get # records\
         //verify
         int input = JOptionPane.showConfirmDialog((Component) null,
-         "Delete database " + nombre + " with " + records + " records?",
+         "Delete database " + nombre + " with "  + " records?",
          "alert", JOptionPane.OK_CANCEL_OPTION);
 
         //If yes
@@ -179,7 +178,7 @@ public class DB{
   }
 
   private static void deleteFolder(File f){
-    File[] files = folder.listFiles();
+    File[] files = File.listRoots();
     if (files != null){
       for (File f2 : files){
         if (f2.isDirectory()){

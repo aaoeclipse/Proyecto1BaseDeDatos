@@ -39,6 +39,7 @@ import javax.swing.JOptionPane;
 
 
 public class Table implements Serializable{
+	boolean f;
   String name;
   ArrayList<Column> columns;
   ArrayList<Constraint> constraints;
@@ -398,9 +399,9 @@ public class Table implements Serializable{
 
   public void updateTuple(ArrayList<Object> vals, ArrayList<Integer> colInds, int noTuple){
     ArrayList<Object> oldValues = tuples.get(noTuple).values;
-    for (int i; i < colInds.size() ; i++){
+    for (int i = 0; i < colInds.size() ; i++){
       int currentInd = colInds.get(i);
-      Object currentVal = values.get(i);
+      Object currentVal = vals.get(i);
       oldValues.set(currentInd, currentVal);
     }
   }
@@ -476,7 +477,7 @@ public class Table implements Serializable{
         return result;
       }
       catch(Exception e){
-        i.printStackTrace();
+        e.printStackTrace();
         return null;
       }
     }
@@ -589,7 +590,7 @@ public class Table implements Serializable{
 
     //Fix metadata
     DBMetaData d = DBMS.metaData.getDB(DBMS.currentDB);
-    TablaMetaData t = d.getTable(this.name);
+    TableMetaData t = d.getTable(this.name);
     i =0;
     b = false;
     for(ColumnMetaData cm: t.columns){
