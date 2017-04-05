@@ -400,4 +400,8 @@ public class Controlador implements InterfaceDeControlador{
 		}
 		System.out.println("Se logro save");
 	}
+
+	public String DBname(){
+		return DataBase.nombreDeBaseDatos;
+	}
 }

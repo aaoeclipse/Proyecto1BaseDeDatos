@@ -15,7 +15,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import ANTLR1.DATABASEBaseVisitor;
 import ANTLR1.DATABASEParser.*;
 import metadata.Columna;
+import metadata.Controlador;
 import metadata.Database;
+import metadata.InterfaceDeControlador;
 import metadata.Table;
 
 
@@ -25,6 +27,8 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	
 	
 	DBMS  dbms;
+	
+	Controlador contr = new Controlador();
     ArrayList<Columna> colsCreate; // Almacena las columns que se crean en CREATE TABLE para poder verificarlas en los metodos de constraints
     Table tableCreate;
     Columna addedCol; //Column que se acaba de add en add column
@@ -233,7 +237,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	@Override
 	//Se debe cambiar db.renameDB a la funcion para cambiar el nombre dentro del manejo de bases de datos
 	public Object visitAlterDbStmt(AlterDbStmtContext ctx) {
-		boolean result = DB.renameDB(ctx.dbName().getText(), ctx.newDbName().getText());
+		boolean result = Controlador.renameDB(ctx.dbName().getText(), ctx.newDbName().getText());
 		if (result){
 			return ctx.newDbName().getText();
 		}
@@ -246,54 +250,29 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 	public Object visitDropDbStmt(DropDbStmtContext ctx) {
 		String nombre = ctx.ID().getText();
 		//Se debe cambiar DB.destroyDB por la funcion para eliminar database de nuestro controlador
-		boolean estaDrop = DB.destroyDB(nombre);
-		if(!estraDrop){
-			Debug.add("ERROR: no se encuentra la base de datos: "+nombre);
-			if(!Frame.activateVerbose){
-				Frame.jTextArea2.setText("Error: no se encuentra la base de datos: "+nombre);
-			}
-			return "ERROR";	
-		}
-		else{
-			//Se debe cambiar dbms por nuestra clase de funciones  y usar la funcion para ignorar
-			if(dbms.currentDB.equalsIgnoreCase(nombre)){
-				dbms.currentDB = "";
-			}
+		boolean estaDrop = contr.dropDatabase(nombre);
+		
 			return nombre;
 		}
-	}
+	
 	
 	@Override
 	public Object visitCreateDbStmt(CreateDbStmtContext ctx) {
 		String nombre = ctx.ID().getText();
 		
-		try{
 			//Se debe remplazar DB por nuestra clase de manej de bases de datos
 			Database database = new Database(nombre);
-			Debug.add("\n Base de datos "+ nombre + " creada exitosamente.");
-			if(!frame.activateVerbose){
-				Frame.jTextArea2.setText("\n Base de datos " + nombre + " creada exitosamente.");
-			}
-			return database;
-		}
-		catch(Exception e){
-			e.printStackTrace();
-			String s = e.getMessage();
-			Frame.jTextArea2.setText(s);
-		}
+			
 		return nombre;
 	}
+	
 	//Revisar 	
 	@Override
 	public Object visitCreateTableStmt(CreateTableStmtContext ctx) {
-            this.availableCols = new ArrayList<Columna>();
-            this.availableCons = new ArrayList<Constraint>();
-            Table t1= new Table(); //Utilizamos el constructor vacio para dejar inicializada la variable
-            this.tableCreate = t1;
-            String nombre = ctx.tableName().getText();
-            t1.name=nombre;
+		 	String nombre = ctx.tableName().getText();
+			contr.createTable(nombre, contr.DBname() );
             //Verificamos si hay una DB en uso
-            if(DBMS.currentDB==null){
+           /* if(DBMS.currentDB==null){
                 Debug.add("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <nombre> para utilizar una base de datos existente.");
                 if(!Frame.activateVerbose){
                     Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <nombre> para utilizar una base de datos existente.");
@@ -377,7 +356,8 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     }
                     return t1;
                 }
-            }
+            }*/
+			
 	}
 	
 	@Override

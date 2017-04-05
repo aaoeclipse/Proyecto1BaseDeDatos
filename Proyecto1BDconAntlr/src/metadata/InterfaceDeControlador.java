@@ -6,6 +6,7 @@ package metadata;
  * **/
 public interface InterfaceDeControlador {
 	public boolean createDatabase(String db); 
+	public String DBname();
 	public boolean createTable(String table, String db); 
 	public boolean createColumna(String db, String table, String colName, int atributo, int[] constraint); 
 	public boolean alterDatabase(String dbViejo, String dbNuevo); 
