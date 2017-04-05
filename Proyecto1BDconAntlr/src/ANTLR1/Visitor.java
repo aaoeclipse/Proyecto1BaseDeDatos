@@ -2260,6 +2260,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
   	//revisar bien esta parte
     @Override
     public Object visitShowDbStmt(ShowDbStmtContext ctx) {
+    	//contr.showDatabase();
     	//1. Especificar el directorio donde se debe ir a buscar el archivo de metadata
         String currentDir = System.getProperty("user.dir");
         System.out.println(currentDir);
@@ -2320,22 +2321,25 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
   	//revisar bien esta parte
     @Override
     public Object visitDropTableStmt(DropTableStmtContext ctx) {
+    	//TODO DropTable
+    	contr.dropTable(ctx.ID().getText(), contr.DBname());
+    	/**
     	if(DBMS.currentDB==null){
-            Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
-            return "ERROR";
+    		Frame.jTextArea2.setText("ERROR: No existe ninguna base de datos en uso. Utilice USE DATABASE <name> para utilizar una base de datos existente.");
+    		return "ERROR";
 
-        }
-        /*Borrar implica:
+    	}
+    	/*Borrar implica:
         1. Ver que base de datos estoy usando. HOLA PABLOOOOO
         2. Buscar la table si existe
         3. Borrar la table en la metadata
-        4. Borrar en el archivo serealizable - deleteAllFilesWithName*/
-        String dbActual = DBMS.currentDB;
-        String tablename = ctx.ID().getText();
-        //Se revisa si existe una dependecia con esta table antes de ser eliminada
-        ArrayList<Constraint> constreintsHere = getAllForeignConstraints();
-        for(Constraint c: constreintsHere){
-            if(c.foreignTable.equals(tablename)){
+        4. Borrar en el archivo serealizable - deleteAllFilesWithName //
+    	String dbActual = DBMS.currentDB;
+    	String tablename = ctx.ID().getText();
+    	//Se revisa si existe una dependecia con esta table antes de ser eliminada
+    	ArrayList<Constraint> constreintsHere = getAllForeignConstraints();
+    	for(Constraint c: constreintsHere){
+    		if(c.foreignTable.equals(tablename)){
                 Frame.jTextArea2.setText("ERROR: Existe una referencia a la table "+tablename);
                 return "ERROR";
             }
@@ -2379,6 +2383,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
         else{
         Frame.jTextArea2.setText("Table '"+tablename+ "' Borrada existosamente.");
         }
+        */
         return super.visitDropTableStmt(ctx);
     }
     
@@ -2407,6 +2412,10 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
   	//revisar bien esta parte
     @Override
     public Object visitUseDbStmt(UseDbStmtContext ctx) {
+    	
+    	contr.useDatabase(ctx.ID().getText());
+    	
+    	/**
     	//1. Especificar el directorio donde se debe ir a buscar el archivo de metadata
         Debug.add("Bucando Directorio de Base de Datos...");
         String currentDir = System.getProperty("user.dir");
@@ -2467,6 +2476,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
             }
             return "ERROR";
         }
+        */
         return super.visitUseDbStmt(ctx);
     }
 

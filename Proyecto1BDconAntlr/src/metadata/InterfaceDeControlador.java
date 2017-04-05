@@ -19,4 +19,5 @@ public interface InterfaceDeControlador {
 	public boolean insert(String db, String table, String Col, String input); 
 	public String select(String db, String table, String Col, String condition); 
 	public boolean orderBy(String db, String table, String col, boolean ascOdes);
+	public String DBname();
 }
