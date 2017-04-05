@@ -1,5 +1,9 @@
 package ANTLR1;
-
+/** 
+ * Proyecto de Base De Datos 1
+ * Visitor, ANTLR4
+ * ModificaciÃ³n: 4 de Abril, 2017 
+ * **/
 import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.File;
@@ -546,7 +550,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                     }
                 }
 
-                //Una vez obtenidos los dos arreglos de columns verificamos que tengan el mismo tamaño
+                //Una vez obtenidos los dos arreglos de columns verificamos que tengan el mismo tamaï¿½o
                 if(fkCols.size()!=localCols.size()){
                     Debug.add("Error: El numero de Columnas locales y remotas en la foregin key debe ser el mismo");
                     if(!Frame.activateVerbose){
@@ -1169,7 +1173,7 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
 
                 Debug.add("Verificando columns de la llave foranea...");
 
-                //Una vez obtenidos los dos arreglos de columns verificamos que tengan el mismo tamaño
+                //Una vez obtenidos los dos arreglos de columns verificamos que tengan el mismo tamaï¿½o
                 if(fkCols.size()!=localCols.size()){
                     Debug.add("ERROR: El numero de columns locales y remotas en la foregin key debe ser el mismo");
                     if(!Frame.activateVerbose){
@@ -1523,9 +1527,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                            String v = values.get(i).toString();
                            //Verificamos el tamanio del string
                            if(v.length()>t.columns.get(i).size){
-                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               Debug.add("ERROR: El tamaï¿½o del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                if(!Frame.activateVerbose){
-                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                   Frame.jTextArea2.setText("ERROR: El tamaï¿½o del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                }
 
                                return "ERRROR";
@@ -1558,9 +1562,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                            String v = values.get(i).toString();
                            //Verificamos el tamanio del string
                            if(v.length()>t.columns.get(i).size){
-                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               Debug.add("ERROR: El tamaï¿½o del CHAR es mayor al definido en la columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                if(!Frame.activateVerbose){
-                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                   Frame.jTextArea2.setText("ERROR: El tamaï¿½o del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                }
                                return "ERRROR";
                            }
@@ -1581,9 +1585,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                            String v = values.get(i).toString();
                            //Verificamos el tamanio del string
                            if(v.length()>t.columns.get(i).size){
-                               Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                               Debug.add("ERROR: El tamaï¿½o del CHAR es mayor al definido en la columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                if(!Frame.activateVerbose){
-                                   Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                   Frame.jTextArea2.setText("ERROR: El tamaï¿½o del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                                }
 
                                return "ERRROR";
@@ -1871,9 +1875,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                         String v = values.get(i).toString();
                         //Verificamos el tamanio del string
                         if(v.length()>t.columns.get(i).size){
-                            Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                            Debug.add("ERROR: El tamaï¿½o del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                Frame.jTextArea2.setText("ERROR: El tamaï¿½o del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                             }
 
                             return "ERRROR";
@@ -1905,9 +1909,9 @@ public class Visitor extends DATABASEBaseVisitor<Object> {
                         String v = values.get(i).toString();
                         //Verificamos el tamanio del string
                         if(v.length()>t.columns.get(i).size){
-                            Debug.add("ERROR: El tamaño del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                            Debug.add("ERROR: El tamaï¿½o del CHAR es mayor al definido en la column <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                             if(!Frame.activateVerbose){
-                                Frame.jTextArea2.setText("ERROR: El tamaño del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
+                                Frame.jTextArea2.setText("ERROR: El tamaï¿½o del CHAR es mayor al definido en la Columna <<"+t.columns.get(i).name+">>. Se encontro: "+v.length()+", "+t.columns.get(i).size);
                             }
 
                             return "ERRROR";

@@ -1,4 +1,9 @@
 package metadata;
+/** 
+ * Proyecto de Base De Datos 1
+ * La interface que se va a utilizar para el visitor
+ * Modificación: 4 de Abril, 2017 
+ * **/
 public interface InterfaceDeControlador {
 	public boolean createDatabase(String db); 
 	public boolean createTable(String table, String db); 
@@ -12,8 +17,5 @@ public interface InterfaceDeControlador {
 	public boolean useDatabase(String db); 
 	public boolean insert(String db, String table, String Col, String input); 
 	public String select(String db, String table, String Col, String condition); 
-	// ====== TODO ===== //
-	public boolean update();
-	public boolean multiInsert();
 	public boolean orderBy(String db, String table, String col, boolean ascOdes);
 }

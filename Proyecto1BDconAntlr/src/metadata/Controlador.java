@@ -1,5 +1,9 @@
 package metadata;
-
+/** 
+ * Proyecto de Base De Datos 1
+ * Controlador implementa la interface del controlador
+ * Modificación: 4 de Abril, 2017 
+ * **/
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -265,12 +269,6 @@ public class Controlador implements InterfaceDeControlador{
 	}
 
 	@Override
-	public boolean update() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public boolean insert(String db, String table, String Col, String input) {
 		if (!readDatabase(db)){
 			System.out.println("Error en insert: base de datos no encontrada");
@@ -284,11 +282,6 @@ public class Controlador implements InterfaceDeControlador{
 		return true;
 	}
 
-	@Override
-	public boolean multiInsert() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	@Override
 	public boolean orderBy(String db, String table, String col, boolean ascOdes) {

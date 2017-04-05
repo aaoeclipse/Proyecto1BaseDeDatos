@@ -1,5 +1,9 @@
 package metadata;
-
+/** 
+ * Proyecto de Base De Datos 1
+ * Table: contiene columans 
+ * Modificación: 4 de Abril, 2017 
+ * **/
 import java.util.ArrayList;
 
 public class Table {

@@ -1,4 +1,9 @@
 package metadata;
+/** 
+ * Proyecto de Base De Datos 1
+ * Base de datos que contiene Tablas
+ * Modificación: 4 de Abril, 2017 
+ * **/
 
 import java.util.ArrayList;
 

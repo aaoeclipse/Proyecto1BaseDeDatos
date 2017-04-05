@@ -1,9 +1,13 @@
 package metadata;
-
+/** 
+ * Proyecto de Base De Datos 1
+ * Columna: tiene contenido
+ * Modificación: 4 de Abril, 2017 
+ * **/
 import java.util.ArrayList;
 
 public class Columna {
-		//0 String, 1 int, 2 char, 3 fecha
+		//atribtuos: 0 String, 1 int, 2 char, 3 fecha
 		int atributos;
 		String nombreDeColumna;
 		//contraints: 0 = nada ,1 = primary key, 2 = Foreign key, 3 = Check

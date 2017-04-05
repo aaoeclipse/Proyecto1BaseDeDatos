@@ -1,5 +1,9 @@
 package metadata;
-
+/** 
+ * Proyecto de Base De Datos 1
+ * El contenido, es el raw data de la base de datos
+ * Modificación: 4 de Abril, 2017 
+ * **/
 public class Contenido {
 	String strCont;
 
