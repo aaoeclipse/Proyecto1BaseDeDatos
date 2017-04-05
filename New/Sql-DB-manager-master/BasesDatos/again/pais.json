@@ -1,0 +1,31 @@
+{
+  "nombre": "pais",
+  "columnas": [
+    {
+      "nombre": "id",
+      "tipo": "int",
+      "valores": [
+        1
+      ],
+      "charCant": 0
+    },
+    {
+      "nombre": "pais",
+      "tipo": "char",
+      "valores": [
+        "Guatemala"
+      ],
+      "charCant": 20
+    }
+  ],
+  "primaryk": [
+    {
+      "nombre": "hola",
+      "idref": [
+        "id"
+      ]
+    }
+  ],
+  "foreignk": [],
+  "check": []
+}
