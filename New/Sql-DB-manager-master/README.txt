@@ -1,26 +1,30 @@
-Sql-DB-manager
-Sql data base manager using Antlr
+SQL DATABASE
+======= GRUPO ======
+Santiago Paiz - 15849
+Luisa Arboleda - 14458
+Andres Oliva - 12149
 
-TÍTULO DE PROYECTO: Data Base Manager System
+------- VERSIÃ“N 1.1 ------
+SQL DATA BASE MANAGER v1.1
 
-VERSIÓN: 07.04.2016/A
+======================================
+INSTRUCCIONES
+	Se debe descargar los tres jars de GSON 2.2.2. proporcionado por el link en descargas. Y ANTLR de java tambiÃ©n proporcionada por el link en descargas. Esta se debe importar directamente al IDE que se desee.
+En este caso voy a utilizar a Eclipse que fue el IDE usado por el grupo. 
+Se importa el proyecto en Eclipse, se selecciona el proyecto y con right-click se escoge Build Path, Configure Build Path. En "Library" se selecciona Add Library -> User Library -> User Libraries -> New -> [proporcionar Nombre de Libreria]. Despues de seleccionar el nombre se escoge "Add External JARs" y se selecciona el GSON-2.2.2.jar descargado. Se selecciona Ok y Finish. Esto lo despliega ahora en la LibrerÃ­a. De aquÃ­ hay que expandirlo (la libreria de gson) y expandir el "gson-2.2.2.jar" y se selecciona "Source Attachment: None" y se preciona el botÃ³n External File. Aqui hay que seleccionar la opciÃ³n de "External location" para habilitar la opciÃ³n External file y se selecciona. Se buscar el folder gson-2.2.2.jar. Se preciona OK.
+Ahora se selecciona el "Javadoc Location" y se repite el proceso anterior pero envez de buscar el "gson-2.2.2-source.jar" se busca el "gson-2.2.2-javadoc.jar". Se preciona OK. Despues se van a proyectos, se le pone un checke a gson y se preciona UP para que este ensima de la libreria default. 
+	Para ANTLR se vuelve a meter en Library se selecciona "Add External JARs" y se selecciona el documento de anltr-4.6 proporcionado en las descargas. Se preciona "OK" y esta listo para ser usada.
 
-AUTORES: Jorge Estuardo García 13175, Luis Humberto Duarte 13003, Kevin Eduardo Rivera 13389
 
-INSTRUCCIONES PARA EL USUARIO: Para poder ejecutar el manejador de base de datos es necesario tener un api de Antlr en una versión superior a la 4.4.1, además también es necesario conectarse con un api de gson en cualquier versión.
+======================================
+COMPLEMENTOS USADOS
+	ANTRL
+	GSON
+	ECLIPSE
 
-COMPLEMENTOS
+======================================
+DESCARGAS
 
-A continuación se muestra una información mucho mas detallada acerca de los complementos necesarios utilizados para el correcto funcionamiento del Manejador de Bases de datos.
+GSON - https://www.versioneye.com/java/com.google.code.gson:gson/2.2.2 
+ANTRL - http://www.antlr.org/download.html
 
-ANTLR
-
-(ANother Tool for Language Recognition) es una poderosa herramienta dedicada a la generación de parser para la lectura, el procesamiento, la ejecución y la traducción estructurada de texto o archivos binarios. Esta herramienta es extensamente usada para la construcción de lenguajes, herramientas y frameworks. A partir de una gramática, Antlr genera un parser que puede construir y recorrer árboles parser.
-
-Para más información y descarga, visitar: http://www.antlr.org/
-
-GSON
-
-Es una biblioteca de código abierto para el lenguaje de programación Java que permite la serialización y deserialización entre objetos Java y su representación en notación JSON.
-
-Para descargar el api, visitar: http://www.java2s.com/Code/Jar/g/Downloadgson222jar.htm
