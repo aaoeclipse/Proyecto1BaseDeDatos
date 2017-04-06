@@ -1,0 +1,23 @@
+{
+  "nombre": "zara",
+  "columnas": [ {
+      "nombre": "id",
+      "tipo": "int",
+      "valores": [],
+      "charCant": 0
+    },
+    {
+      "nombre": "nombre",
+      "tipo": "char",
+      "valores": [],
+      "charCant": 20
+    }],
+  "primaryk": [{
+      "nombre": "pkZara",
+      "idref": [
+        "id"
+      ]
+    }],
+  "foreignk": [],
+  "check": []
+}
